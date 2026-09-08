@@ -1,0 +1,21 @@
+# ZinjaI / MinGW (GCC): salidas de compilacion
+Debug_Win32/
+Release_Win32/
+Debug_Linux/
+Release_Linux/
+*.o
+*.obj
+*.gch
+*.exe
+*.bin
+
+# Editores / IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+
+# Sistema
+Thumbs.db
+Desktop.ini
