@@ -39,6 +39,8 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     nivel = 1;
     lineas = 0;
     tiempoMs = 0;
+    holdUsado = false;
+    nombreJugador = "";
     relojGravedad.restart();
 }
 
@@ -54,6 +56,7 @@ void Juego::reiniciarPartida() {
     tablero.limpiar();
     colaPiezas = ColaPiezas();
     colaPiezas.rellenarSiFalta();
+    pilaHold.vaciar();
     tipoActual = -1;
     rotActual = 0;
     filaActual = 0;
@@ -62,6 +65,8 @@ void Juego::reiniciarPartida() {
     nivel = 1;
     lineas = 0;
     tiempoMs = 0;
+    holdUsado = false;
+    nombreJugador = "";
 }
 
 void Juego::generarPieza() {
@@ -70,8 +75,13 @@ void Juego::generarPieza() {
     rotActual = 0;
     filaActual = PIEZA_SPAWN_FILA;
     colActual = PIEZA_SPAWN_COL;
+    holdUsado = false;
     if (!piezaPuede(filaActual, colActual, rotActual)) {
-        estado = GAME_OVER;
+        if (puntaje > 0) {
+            estado = INGRESAR_NOMBRE;
+        } else {
+            estado = GAME_OVER;
+        }
     }
 }
 
@@ -118,6 +128,45 @@ int Juego::puntajePorLineas(int n) const {
         return 300;
     }
     return 1200;
+}
+
+void Juego::usarHold() {
+    if (holdUsado) {
+        return;
+    }
+    if (tipoActual < 0) {
+        return;
+    }
+
+    if (pilaHold.vacia()) {
+        pilaHold.push(tipoActual);
+        generarPieza();
+    } else {
+        int intercambio = pilaHold.pop();
+        pilaHold.push(tipoActual);
+        tipoActual = intercambio;
+        rotActual = 0;
+        filaActual = PIEZA_SPAWN_FILA;
+        colActual = PIEZA_SPAWN_COL;
+        holdUsado = true;
+
+        if (!piezaPuede(filaActual, colActual, rotActual)) {
+            if (puntaje > 0) {
+                estado = INGRESAR_NOMBRE;
+            } else {
+                estado = GAME_OVER;
+            }
+        }
+    }
+}
+
+void Juego::guardarRanking() {
+    if (nombreJugador.empty()) {
+        nombreJugador = "JUGADOR";
+    }
+    ranking.agregar(nombreJugador, puntaje);
+    ranking.guardar();
+    estado = GAME_OVER;
 }
 
 void Juego::activarOpcion() {
@@ -184,6 +233,26 @@ void Juego::procesarEventos() {
             continue;
         }
 
+        if (evento.type == Event::TextEntered) {
+            if (estado == INGRESAR_NOMBRE) {
+                if (evento.text.unicode == 8) {
+                    if (nombreJugador.size() > 0) {
+                        nombreJugador.erase(nombreJugador.size() - 1);
+                    }
+                } else if (evento.text.unicode == 13) {
+                    guardarRanking();
+                } else if (evento.text.unicode >= 32) {
+                    if (evento.text.unicode < 127) {
+                        if (nombreJugador.size() < 10) {
+                            nombreJugador =
+                                nombreJugador + (char)evento.text.unicode;
+                        }
+                    }
+                }
+                continue;
+            }
+        }
+
         if (evento.type != Event::KeyPressed) {
             continue;
         }
@@ -226,6 +295,8 @@ void Juego::procesarEventos() {
                     puede = piezaPuede(filaActual + 1, colActual, rotActual);
                 }
                 bloquearPieza();
+            } else if (tecla == Keyboard::C) {
+                usarHold();
             } else if (tecla == Keyboard::Return ||
                        tecla == Keyboard::Escape) {
                 estado = MENU;
@@ -233,6 +304,10 @@ void Juego::procesarEventos() {
         } else if (estado == GAME_OVER) {
             if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
                 estado = MENU;
+            }
+        } else if (estado == INGRESAR_NOMBRE) {
+            if (tecla == Keyboard::Escape) {
+                estado = GAME_OVER;
             }
         } else if (estado == VER_RANKING) {
             if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
@@ -258,14 +333,15 @@ void Juego::actualizar() {
 void Juego::render() {
     ventana.clear(Color(40, 40, 45));
 
-    if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER) {
+    if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER ||
+        estado == INGRESAR_NOMBRE) {
         dibujarFondo();
         if (estado == MENU) {
             dibujarMenu();
-        } else if (estado == GAME_OVER) {
+        } else if (estado == VER_RANKING) {
+            dibujarRanking(260, 110, true);
+        } else if (estado == GAME_OVER || estado == INGRESAR_NOMBRE) {
             dibujarGameOver();
-        } else {
-            dibujarProximamente("VER RANKING");
         }
         ventana.display();
         return;
@@ -399,10 +475,15 @@ void Juego::dibujarPanel() {
     }
 
     dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
+    int tipoHold = -1;
+    if (!pilaHold.vacia()) {
+        tipoHold = pilaHold.arriba();
+    }
+    dibujarPiezaEn(tipoHold, 0, PX_HOLD + 8, 70, TAM_HOLD);
 
     dibujarTexto("IZQ/DER: mover    ARRIBA/X: rotar",
                  px, 630, 16, Color(140, 140, 150));
-    dibujarTexto("ABAJO: bajar    ESPACIO: caer",
+    dibujarTexto("ABAJO/ESPACIO: bajar/caer    C: guardar",
                  px, 652, 16, Color(140, 140, 150));
     dibujarTexto("Enter/Esc: volver al menu",
                  px, 674, 16, Color(140, 140, 150));
@@ -470,13 +551,51 @@ void Juego::dibujarMenu() {
 }
 
 void Juego::dibujarGameOver() {
-    dibujarTexto("GAME OVER", 330, 180, 80, Color(255, 90, 90));
-    dibujarTexto("Puntaje final: " + to_string(puntaje),
-                 340, 300, 30, Color(255, 220, 60));
-    dibujarTexto("Lineas: " + to_string(lineas),
-                 380, 345, 26, Color(220, 220, 220));
-    dibujarTexto("Enter/Esc: volver al menu",
-                 350, 420, 22, Color(140, 140, 150));
+    if (estado == INGRESAR_NOMBRE) {
+        dibujarTexto("FIN DE LA PARTIDA", 280, 130, 60, Color(255, 80, 80));
+        string txtPuntaje = "Puntaje: " + to_string(puntaje);
+        dibujarTexto(txtPuntaje, 350, 210, 34, Color(255, 220, 60));
+        dibujarTexto("Ingresa tu nombre (Enter para guardar)",
+                     300, 290, 24, Color(220, 220, 220));
+        dibujarTexto("Esc: no guardar en el ranking",
+                     300, 325, 20, Color(150, 150, 150));
+        string txtNombre = nombreJugador + "_";
+        dibujarTexto(txtNombre, 360, 370, 40, Color(120, 220, 255));
+        return;
+    }
+
+    dibujarTexto("GAME OVER", 290, 100, 70, Color(255, 80, 80));
+    string txtPuntaje2 = "Puntaje: " + to_string(puntaje);
+    dibujarTexto(txtPuntaje2, 350, 190, 34, Color(255, 220, 60));
+    dibujarRanking(330, 250, true);
+    dibujarTexto("Enter: menu", 330, 620, 20, Color(140, 140, 150));
+}
+
+void Juego::dibujarRanking(int px, int py, bool conTitulo) {
+    int y;
+    if (conTitulo) {
+        dibujarTexto("RANKING TOP-10", px, py, 30, Color(255, 220, 60));
+        y = py + 50;
+    } else {
+        y = py;
+    }
+
+    int n = ranking.getCantidad();
+    if (n == 0) {
+        dibujarTexto("(sin registros)", px, y, 22, Color(150, 150, 150));
+        return;
+    }
+
+    int i;
+    for (i = 0; i < n; i++) {
+        if (i < 10) {
+            Registro r = ranking.obtener(i);
+            string linea = to_string(i + 1) + ". " + r.nombre +
+                           "  " + to_string(r.puntos);
+            dibujarTexto(linea, px, y, 22, Color(220, 220, 220));
+            y = y + 30;
+        }
+    }
 }
 
 void Juego::dibujarProximamente(const string& titulo) {

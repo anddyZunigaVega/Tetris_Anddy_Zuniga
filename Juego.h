@@ -7,6 +7,8 @@
 #include "Pieza.h"
 #include "Tablero.h"
 #include "ColaPiezas.h"
+#include "Pila.h"
+#include "Ranking.h"
 
 using namespace sf;
 using namespace std;
@@ -20,7 +22,8 @@ enum EstadoJuego {
     MENU,
     JUGANDO,
     VER_RANKING,
-    GAME_OVER
+    GAME_OVER,
+    INGRESAR_NOMBRE
 };
 
 // Version en avance: interfaz como TetrisB, con la pieza cayendo por
@@ -36,6 +39,8 @@ private:
 
     Tablero tablero;
     ColaPiezas colaPiezas;
+    Pila pilaHold;
+    Ranking ranking;
 
     int tipoActual;
     int rotActual;
@@ -45,13 +50,17 @@ private:
     int nivel;
     int lineas;
     int tiempoMs;
+    bool holdUsado;
+    string nombreJugador;
 
     void reiniciarPartida();
     void generarPieza();
     bool piezaPuede(int f, int c, int r) const;
     void gravedad();
     void bloquearPieza();
+    void usarHold();
     int puntajePorLineas(int n) const;
+    void guardarRanking();
     void activarOpcion();
     int opcionEn(int x, int y) const;
 
@@ -67,6 +76,7 @@ private:
     void dibujarPanel();
     void dibujarMenu();
     void dibujarGameOver();
+    void dibujarRanking(int px, int py, bool conTitulo);
     void dibujarProximamente(const string& titulo);
     void dibujarPiezaEn(int tipo, int rot, int px, int py, int tam) const;
 
