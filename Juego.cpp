@@ -35,6 +35,10 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     rotActual = 0;
     filaActual = 0;
     colActual = 0;
+    puntaje = 0;
+    nivel = 1;
+    lineas = 0;
+    tiempoMs = 0;
     relojGravedad.restart();
 }
 
@@ -54,6 +58,10 @@ void Juego::reiniciarPartida() {
     rotActual = 0;
     filaActual = 0;
     colActual = 0;
+    puntaje = 0;
+    nivel = 1;
+    lineas = 0;
+    tiempoMs = 0;
 }
 
 void Juego::generarPieza() {
@@ -62,6 +70,9 @@ void Juego::generarPieza() {
     rotActual = 0;
     filaActual = PIEZA_SPAWN_FILA;
     colActual = PIEZA_SPAWN_COL;
+    if (!piezaPuede(filaActual, colActual, rotActual)) {
+        estado = GAME_OVER;
+    }
 }
 
 bool Juego::piezaPuede(int f, int c, int r) const {
@@ -79,8 +90,34 @@ void Juego::gravedad() {
 }
 
 void Juego::bloquearPieza() {
+    if (estado != JUGANDO) {
+        return;
+    }
     tablero.ponesFicha(tipoActual, rotActual, filaActual, colActual);
+
+    int completas[20];
+    int n = tablero.filasCompletas(completas);
+    if (n > 0) {
+        lineas = lineas + n;
+        puntaje = puntaje + puntajePorLineas(n) * nivel;
+        nivel = lineas / 10 + 1;
+        tablero.borrarFilas(completas, n);
+    }
+
     generarPieza();
+}
+
+int Juego::puntajePorLineas(int n) const {
+    if (n == 1) {
+        return 40;
+    }
+    if (n == 2) {
+        return 100;
+    }
+    if (n == 3) {
+        return 300;
+    }
+    return 1200;
 }
 
 void Juego::activarOpcion() {
@@ -193,6 +230,10 @@ void Juego::procesarEventos() {
                        tecla == Keyboard::Escape) {
                 estado = MENU;
             }
+        } else if (estado == GAME_OVER) {
+            if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+                estado = MENU;
+            }
         } else if (estado == VER_RANKING) {
             if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
                 estado = MENU;
@@ -206,7 +247,9 @@ void Juego::actualizar() {
         return;
     }
     Time dt = relojGravedad.getElapsedTime();
-    if (dt.asMilliseconds() >= VELOCIDAD_CAIDA_MS) {
+    int ms = dt.asMilliseconds();
+    tiempoMs = tiempoMs + ms;
+    if (ms >= VELOCIDAD_CAIDA_MS) {
         relojGravedad.restart();
         gravedad();
     }
@@ -215,10 +258,12 @@ void Juego::actualizar() {
 void Juego::render() {
     ventana.clear(Color(40, 40, 45));
 
-    if (estado == MENU || estado == VER_RANKING) {
+    if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER) {
         dibujarFondo();
         if (estado == MENU) {
             dibujarMenu();
+        } else if (estado == GAME_OVER) {
+            dibujarGameOver();
         } else {
             dibujarProximamente("VER RANKING");
         }
@@ -329,16 +374,18 @@ void Juego::dibujarPanel() {
     int px = PX_PANEL;
 
     dibujarTexto("PUNTOS", px, 45, 20, Color(180, 180, 190));
-    dibujarTexto("0", px, 70, 40, Color(255, 220, 60));
+    dibujarTexto(to_string(puntaje), px, 70, 40, Color(255, 220, 60));
 
     dibujarTexto("NIVEL", px, 120, 20, Color(180, 180, 190));
-    dibujarTexto("1", px, 140, 34, Color(220, 120, 255));
+    dibujarTexto(to_string(nivel), px, 140, 34, Color(220, 120, 255));
 
     dibujarTexto("LINEAS", px, 180, 20, Color(180, 180, 190));
-    dibujarTexto("0", px, 200, 34, Color(255, 120, 120));
+    dibujarTexto(to_string(lineas), px, 200, 34, Color(255, 120, 120));
 
     dibujarTexto("TIEMPO", px, 240, 20, Color(180, 180, 190));
-    dibujarTexto("0 s", px, 260, 30, Color(120, 220, 255));
+    int segundos = tiempoMs / 1000;
+    string txtTiempo = to_string(segundos) + " s";
+    dibujarTexto(txtTiempo, px, 260, 30, Color(120, 220, 255));
 
     dibujarTexto("PROXIMAS", px, 300, 20, Color(180, 180, 190));
     int yPrev = 325;
@@ -420,6 +467,16 @@ void Juego::dibujarMenu() {
 
     dibujarTexto("Enter o click: elegir     Esc: salir",
                  360, 520, 18, Color(140, 140, 150));
+}
+
+void Juego::dibujarGameOver() {
+    dibujarTexto("GAME OVER", 330, 180, 80, Color(255, 90, 90));
+    dibujarTexto("Puntaje final: " + to_string(puntaje),
+                 340, 300, 30, Color(255, 220, 60));
+    dibujarTexto("Lineas: " + to_string(lineas),
+                 380, 345, 26, Color(220, 220, 220));
+    dibujarTexto("Enter/Esc: volver al menu",
+                 350, 420, 22, Color(140, 140, 150));
 }
 
 void Juego::dibujarProximamente(const string& titulo) {

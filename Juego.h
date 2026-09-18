@@ -19,7 +19,8 @@ const int VELOCIDAD_CAIDA_MS = 700;
 enum EstadoJuego {
     MENU,
     JUGANDO,
-    VER_RANKING
+    VER_RANKING,
+    GAME_OVER
 };
 
 // Version en avance: interfaz como TetrisB, con la pieza cayendo por
@@ -40,12 +41,17 @@ private:
     int rotActual;
     int filaActual;
     int colActual;
+    int puntaje;
+    int nivel;
+    int lineas;
+    int tiempoMs;
 
     void reiniciarPartida();
     void generarPieza();
     bool piezaPuede(int f, int c, int r) const;
     void gravedad();
     void bloquearPieza();
+    int puntajePorLineas(int n) const;
     void activarOpcion();
     int opcionEn(int x, int y) const;
 
@@ -60,6 +66,7 @@ private:
     void dibujarTablero();
     void dibujarPanel();
     void dibujarMenu();
+    void dibujarGameOver();
     void dibujarProximamente(const string& titulo);
     void dibujarPiezaEn(int tipo, int rot, int px, int py, int tam) const;
 
