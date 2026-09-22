@@ -136,3 +136,39 @@ void compararOrdenamientos() {
         archivo.close();
     }
 }
+
+void ordenarRegistrosInsercion(Registro* r, int n) {
+    int i;
+    int j;
+    Registro clave;
+    for (i = 1; i < n; i++) {
+        clave = r[i];
+        j = i - 1;
+        while (j >= 0 && r[j].puntos < clave.puntos) {
+            r[j + 1] = r[j];
+            j = j - 1;
+        }
+        r[j + 1] = clave;
+    }
+}
+
+void ordenarRegistrosQuick(Registro* r, int izq, int der) {
+    if (izq < der) {
+        Registro pivote = r[der];
+        int i = izq;
+        int j = izq;
+        for (; j < der; j++) {
+            if (r[j].puntos > pivote.puntos) {
+                Registro aux = r[i];
+                r[i] = r[j];
+                r[j] = aux;
+                i = i + 1;
+            }
+        }
+        Registro aux2 = r[i];
+        r[i] = r[der];
+        r[der] = aux2;
+        ordenarRegistrosQuick(r, izq, i - 1);
+        ordenarRegistrosQuick(r, i + 1, der);
+    }
+}

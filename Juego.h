@@ -52,6 +52,10 @@ private:
     int tiempoMs;
     bool holdUsado;
     string nombreJugador;
+    int filasBorrar[20];
+    int nFilasBorrar;
+    int parpadeoMs;
+    int algoritmoRanking;
 
     void reiniciarPartida();
     void generarPieza();

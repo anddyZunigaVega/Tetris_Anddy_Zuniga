@@ -41,6 +41,9 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     tiempoMs = 0;
     holdUsado = false;
     nombreJugador = "";
+    nFilasBorrar = 0;
+    parpadeoMs = 0;
+    algoritmoRanking = 0;
     relojGravedad.restart();
 }
 
@@ -67,6 +70,8 @@ void Juego::reiniciarPartida() {
     tiempoMs = 0;
     holdUsado = false;
     nombreJugador = "";
+    nFilasBorrar = 0;
+    parpadeoMs = 0;
 }
 
 void Juego::generarPieza() {
@@ -108,10 +113,13 @@ void Juego::bloquearPieza() {
     int completas[20];
     int n = tablero.filasCompletas(completas);
     if (n > 0) {
-        lineas = lineas + n;
-        puntaje = puntaje + puntajePorLineas(n) * nivel;
-        nivel = lineas / 10 + 1;
-        tablero.borrarFilas(completas, n);
+        int i;
+        for (i = 0; i < n; i++) {
+            filasBorrar[i] = completas[i];
+        }
+        nFilasBorrar = n;
+        parpadeoMs = 0;
+        return;
     }
 
     generarPieza();
@@ -310,7 +318,15 @@ void Juego::procesarEventos() {
                 estado = GAME_OVER;
             }
         } else if (estado == VER_RANKING) {
-            if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+            if (tecla == Keyboard::Num1) {
+                algoritmoRanking = 0;
+                ranking.setAlgoritmo(algoritmoRanking);
+                ranking.reordenar();
+            } else if (tecla == Keyboard::Num2) {
+                algoritmoRanking = 1;
+                ranking.setAlgoritmo(algoritmoRanking);
+                ranking.reordenar();
+            } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
                 estado = MENU;
             }
         }
@@ -324,6 +340,22 @@ void Juego::actualizar() {
     Time dt = relojGravedad.getElapsedTime();
     int ms = dt.asMilliseconds();
     tiempoMs = tiempoMs + ms;
+
+    if (nFilasBorrar > 0) {
+        parpadeoMs = parpadeoMs + ms;
+        if (parpadeoMs >= 400) {
+            lineas = lineas + nFilasBorrar;
+            puntaje = puntaje + puntajePorLineas(nFilasBorrar) * nivel;
+            nivel = lineas / 10 + 1;
+            tablero.borrarFilas(filasBorrar, nFilasBorrar);
+            nFilasBorrar = 0;
+            parpadeoMs = 0;
+            relojGravedad.restart();
+            generarPieza();
+        }
+        return;
+    }
+
     if (ms >= VELOCIDAD_CAIDA_MS) {
         relojGravedad.restart();
         gravedad();
@@ -432,7 +464,18 @@ void Juego::dibujarTablero() {
             }
             celda.setSize(Vector2f((float)(TAM_CELDA - 2),
                                    (float)(TAM_CELDA - 2)));
-            celda.setFillColor(colorDeTipo(v - 1));
+            Color colorCelda = colorDeTipo(v - 1);
+            int b;
+            bool parpadea = false;
+            for (b = 0; b < nFilasBorrar; b++) {
+                if (filasBorrar[b] == f) {
+                    parpadea = true;
+                }
+            }
+            if (parpadea && (parpadeoMs / 90) % 2 == 0) {
+                colorCelda = Color(255, 255, 255);
+            }
+            celda.setFillColor(colorCelda);
             celda.setPosition((float)(PX_TABLERO + c * TAM_CELDA + 1),
                               (float)(PY_TABLERO + f * TAM_CELDA + 1));
             ventana.draw(celda);
@@ -574,7 +617,13 @@ void Juego::dibujarGameOver() {
 void Juego::dibujarRanking(int px, int py, bool conTitulo) {
     int y;
     if (conTitulo) {
-        dibujarTexto("RANKING TOP-10", px, py, 30, Color(255, 220, 60));
+        string titulo = "RANKING TOP-10";
+        if (algoritmoRanking == 0) {
+            titulo = titulo + "  (insercion)";
+        } else {
+            titulo = titulo + "  (quicksort)";
+        }
+        dibujarTexto(titulo, px, py, 30, Color(255, 220, 60));
         y = py + 50;
     } else {
         y = py;
@@ -595,6 +644,11 @@ void Juego::dibujarRanking(int px, int py, bool conTitulo) {
             dibujarTexto(linea, px, y, 22, Color(220, 220, 220));
             y = y + 30;
         }
+    }
+
+    if (conTitulo) {
+        dibujarTexto("Teclea 1=insercion  2=quicksort para cambiar",
+                     px, y + 5, 18, Color(140, 140, 150));
     }
 }
 

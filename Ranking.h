@@ -17,6 +17,7 @@ class Ranking {
 private:
     Registro top[RANKING_MAX];
     int cantidad;
+    int algoritmo;
     void ordenarTop();
     void cargar();
 
@@ -27,6 +28,8 @@ public:
     int getCantidad() const;
     Registro obtener(int i) const;
     void imprimir() const;
+    void setAlgoritmo(int a);
+    void reordenar();
 };
 
 #endif

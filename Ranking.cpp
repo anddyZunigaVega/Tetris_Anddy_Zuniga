@@ -1,4 +1,5 @@
 #include "Ranking.h"
+#include "Ordenamiento.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -7,6 +8,7 @@ using namespace std;
 
 Ranking::Ranking() {
     cantidad = 0;
+    algoritmo = 0;
     cargar();
 }
 
@@ -40,18 +42,20 @@ void Ranking::cargar() {
 }
 
 void Ranking::ordenarTop() {
-    int i;
-    int j;
-    Registro clave;
-    for (i = 1; i < cantidad; i++) {
-        clave = top[i];
-        j = i - 1;
-        while (j >= 0 && top[j].puntos < clave.puntos) {
-            top[j + 1] = top[j];
-            j = j - 1;
-        }
-        top[j + 1] = clave;
+    if (algoritmo == 1) {
+        ordenarRegistrosQuick(top, 0, cantidad - 1);
+        return;
     }
+    ordenarRegistrosInsercion(top, cantidad);
+}
+
+void Ranking::setAlgoritmo(int a) {
+    algoritmo = a;
+    ordenarTop();
+}
+
+void Ranking::reordenar() {
+    ordenarTop();
 }
 
 int Ranking::agregar(const string& nombre, int puntos) {
