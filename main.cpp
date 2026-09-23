@@ -13,7 +13,9 @@ int main() {
     compararOrdenamientos();
     cout << "Resultados guardados en ordenamientos.txt\n";
 
-    RenderWindow ventana(VideoMode(VENTANA_ANCHO, VENTANA_ALTO),"Tetris - Anddy Zuniga - Estructura de Datos");
+    RenderWindow ventana(VideoMode(VENTANA_ANCHO, VENTANA_ALTO),
+                         "Tetris - Anddy Zuniga - Estructura de Datos",
+                         Style::Titlebar | Style::Close);
     ventana.setFramerateLimit(60);
 
     Font fuente;

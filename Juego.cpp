@@ -1,5 +1,6 @@
 #include "Juego.h"
 
+#include <iostream>
 #include <string>
 
 using namespace sf;
@@ -48,9 +49,13 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     nombreJugador = "";
     nFilasBorrar = 0;
     parpadeoMs = 0;
-    algoritmoRanking = 0;
+algoritmoRanking = 0;
     relojGravedad.restart();
     relojMarco.restart();
+    if (!texturaJuego.loadFromFile("assets/imagenes/juego.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/juego.png\n";
+    }
+    fondoJuego.setTexture(texturaJuego);
 }
 
 void Juego::correr() {
@@ -394,15 +399,15 @@ if (evento.mouseButton.button == Mouse::Left) {
                 ventana.close();
             }
         } else if (estado == JUGANDO) {
-            if (tecla == Keyboard::Left || tecla == Keyboard::A) {
+if (tecla == Keyboard::Left) {
                 if (piezaPuede(filaActual, colActual - 1, rotActual)) {
                     colActual = colActual - 1;
                 }
-            } else if (tecla == Keyboard::Right || tecla == Keyboard::D) {
+            } else if (tecla == Keyboard::Right) {
                 if (piezaPuede(filaActual, colActual + 1, rotActual)) {
                     colActual = colActual + 1;
                 }
-            } else if (tecla == Keyboard::Up || tecla == Keyboard::X) {
+            } else if (tecla == Keyboard::Up) {
                 int nuevaRot = (rotActual + 1) % 4;
                 if (piezaPuede(filaActual, colActual, nuevaRot)) {
                     rotActual = nuevaRot;
@@ -419,9 +424,9 @@ if (evento.mouseButton.button == Mouse::Left) {
                 caerInstantaneo();
             } else if (tecla == Keyboard::C) {
                 usarHold();
-            } else if (tecla == Keyboard::Z) {
+} else if (tecla == Keyboard::D) {
                 deshacer();
-            } else if (tecla == Keyboard::Y) {
+            } else if (tecla == Keyboard::A) {
                 rehacer();
             } else if (tecla == Keyboard::P || tecla == Keyboard::Escape) {
                 relojGravedad.restart();
@@ -525,6 +530,7 @@ void Juego::actualizar() {
 
 void Juego::render() {
     ventana.clear(Color(40, 40, 45));
+    ventana.draw(fondoJuego);
 
     if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER ||
         estado == INGRESAR_NOMBRE || estado == PAUSA) {
@@ -674,27 +680,27 @@ void Juego::dibujarPanel() {
     string txtTiempo = to_string(segundos) + " s";
     dibujarTexto(txtTiempo, px, 260, 30, Color(120, 220, 255));
 
-    dibujarTexto("PROXIMAS", px, 300, 20, Color(180, 180, 190));
-    int yPrev = 325;
-    int k;
-    for (k = 0; k < 3; k++) {
-        if (k < colaPiezas.tamano()) {
-            int pieza = colaPiezas.proximo(k);
-            dibujarPiezaEn(pieza, 0, px + 8, yPrev, TAM_PREVIEW);
-        }
-        yPrev = yPrev + 96;
-    }
-
-    dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
+dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
     int tipoHold = -1;
     if (!pilaHold.vacia()) {
         tipoHold = pilaHold.arriba();
     }
-    dibujarPiezaEn(tipoHold, 0, PX_HOLD + 8, 70, TAM_HOLD);
+    dibujarPiezaEn(tipoHold, 0, PX_HOLD + 40, 105, TAM_HOLD);
 
-    dibujarTexto("IZQ/DER: mover   ARRIBA/X: rotar   ABAJO: bajar",
+    dibujarTexto("PROXIMAS", PX_HOLD + 20, 230, 20, Color(180, 180, 190));
+    int yPrev = 255;
+    int k;
+    for (k = 0; k < 3; k++) {
+        if (k < colaPiezas.tamano()) {
+            int pieza = colaPiezas.proximo(k);
+            dibujarPiezaEn(pieza, 0, PX_HOLD + 20, yPrev, TAM_PREVIEW);
+        }
+        yPrev = yPrev + 96;
+    }
+
+    dibujarTexto("IZQ/DER: mover   ARRIBA: rotar   ABAJO: bajar",
                  px, 630, 16, Color(140, 140, 150));
-    dibujarTexto("ESPACIO: caer   C: guardar   Z/Y: deshacer/rehacer",
+    dibujarTexto("ESPACIO: caer   C: guardar   D/A: deshacer/rehacer",
                  px, 652, 16, Color(140, 140, 150));
     dibujarTexto("P/Esc: pausa    R: replay", px, 674, 16,
                  Color(140, 140, 150));

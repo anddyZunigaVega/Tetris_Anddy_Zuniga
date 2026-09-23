@@ -36,6 +36,8 @@ class Juego {
 private:
     RenderWindow& ventana;
     const Font& fuente;
+    Texture texturaJuego;
+    Sprite fondoJuego;
     Clock relojGravedad;
     Clock relojMarco;
     Clock relojReplay;
