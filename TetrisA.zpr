@@ -23,7 +23,7 @@ cursor=20:1
 open=true
 [source]
 path=Juego.cpp
-cursor=648:10
+cursor=151:20
 open=true
 [source]
 path=Pieza.cpp

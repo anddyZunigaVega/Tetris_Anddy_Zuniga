@@ -4,4 +4,4 @@ Tamano Insercion_ms Quick_ms Ordena_Igual
 10       0.000            0.000          SI
 100      0.000            0.000          SI
 1000     0.000            0.000          SI
-10000    36.511           0.000          SI
+10000    43.324           0.000          SI

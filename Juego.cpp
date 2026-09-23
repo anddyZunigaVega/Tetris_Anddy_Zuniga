@@ -13,11 +13,11 @@ const int PX_PANEL = 40;
 const int PX_HOLD = (PX_TABLERO + PX_PANEL) / 2;
 const int TAM_PREVIEW = 20;
 const int TAM_HOLD = 22;
-const int MENU_BTN_X = 360;
-const int MENU_BTN_Y = 330;
-const int MENU_BTN_ANCHO = 260;
-const int MENU_BTN_ALTO = 48;
-const int MENU_BTN_SEPARACION = 64;
+const int MENU_BTN_X = 310;
+const int MENU_BTN_Y = 230;
+const int MENU_BTN_ANCHO = 360;
+const int MENU_BTN_ALTO = 64;
+const int MENU_BTN_SEPARACION = 76;
 const Color COLOR_MENU_AZUL = Color(66, 133, 244);
 const Color COLOR_MENU_AZUL_MOUSE = Color(110, 168, 255);
 const Color COLOR_MENU_VERDE = Color(52, 168, 83);
@@ -56,6 +56,14 @@ algoritmoRanking = 0;
         cout << "Aviso: no se encontro assets/imagenes/juego.png\n";
     }
     fondoJuego.setTexture(texturaJuego);
+    if (!texturaReplay.loadFromFile("assets/imagenes/replay.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/replay.png\n";
+    }
+    fondoReplay.setTexture(texturaReplay);
+    if (!texturaMenu.loadFromFile("assets/imagenes/mainMenu.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/mainMenu.png\n";
+    }
+    fondoMenu.setTexture(texturaMenu);
 }
 
 void Juego::correr() {
@@ -388,14 +396,8 @@ if (evento.mouseButton.button == Mouse::Left) {
         }
         Keyboard::Key tecla = evento.key.code;
 
-        if (estado == MENU) {
-            if (tecla == Keyboard::Up || tecla == Keyboard::W) {
-                seleccionMenu = (seleccionMenu + 2) % 3;
-            } else if (tecla == Keyboard::Down || tecla == Keyboard::S) {
-                seleccionMenu = (seleccionMenu + 1) % 3;
-            } else if (tecla == Keyboard::Return) {
-                activarOpcion();
-            } else if (tecla == Keyboard::Escape) {
+if (estado == MENU) {
+            if (tecla == Keyboard::Escape) {
                 ventana.close();
             }
         } else if (estado == JUGANDO) {
@@ -530,11 +532,19 @@ void Juego::actualizar() {
 
 void Juego::render() {
     ventana.clear(Color(40, 40, 45));
-    ventana.draw(fondoJuego);
+    if (estado == MENU) {
+        ventana.draw(fondoMenu);
+    } else if (estado == REPLAY) {
+        ventana.draw(fondoReplay);
+    } else {
+        ventana.draw(fondoJuego);
+    }
 
     if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER ||
         estado == INGRESAR_NOMBRE || estado == PAUSA) {
-        dibujarFondo();
+        if (estado != MENU) {
+            dibujarFondo();
+        }
         if (estado == MENU) {
             dibujarMenu();
         } else if (estado == VER_RANKING) {
@@ -621,14 +631,6 @@ void Juego::dibujarPiezaEn(int tipo, int rot, int px, int py, int tam) const {
 }
 
 void Juego::dibujarTablero() {
-    RectangleShape fondo(Vector2f((float)(COLS_TABLERO * TAM_CELDA),
-                                  (float)(FILAS_TABLERO * TAM_CELDA)));
-    fondo.setPosition((float)PX_TABLERO, (float)PY_TABLERO);
-    fondo.setFillColor(Color(52, 52, 58));
-    fondo.setOutlineColor(Color(140, 140, 150));
-    fondo.setOutlineThickness(3.0f);
-    ventana.draw(fondo);
-
     RectangleShape celda;
     int f;
     int c;
@@ -666,29 +668,23 @@ void Juego::dibujarTablero() {
 void Juego::dibujarPanel() {
     int px = PX_PANEL;
 
-    dibujarTexto("PUNTOS", px, 45, 20, Color(180, 180, 190));
     dibujarTexto(to_string(puntaje), px, 70, 40, Color(255, 220, 60));
 
-    dibujarTexto("NIVEL", px, 120, 20, Color(180, 180, 190));
     dibujarTexto(to_string(nivel), px, 140, 34, Color(220, 120, 255));
 
-    dibujarTexto("LINEAS", px, 180, 20, Color(180, 180, 190));
     dibujarTexto(to_string(lineas), px, 200, 34, Color(255, 120, 120));
 
-    dibujarTexto("TIEMPO", px, 240, 20, Color(180, 180, 190));
     int segundos = tiempoMs / 1000;
     string txtTiempo = to_string(segundos) + " s";
     dibujarTexto(txtTiempo, px, 260, 30, Color(120, 220, 255));
 
-dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
     int tipoHold = -1;
     if (!pilaHold.vacia()) {
         tipoHold = pilaHold.arriba();
     }
     dibujarPiezaEn(tipoHold, 0, PX_HOLD + 40, 105, TAM_HOLD);
 
-    dibujarTexto("PROXIMAS", PX_HOLD + 20, 230, 20, Color(180, 180, 190));
-    int yPrev = 255;
+    int yPrev = 285;
     int k;
     for (k = 0; k < 3; k++) {
         if (k < colaPiezas.tamano()) {
@@ -697,13 +693,6 @@ dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
         }
         yPrev = yPrev + 96;
     }
-
-    dibujarTexto("IZQ/DER: mover   ARRIBA: rotar   ABAJO: bajar",
-                 px, 630, 16, Color(140, 140, 150));
-    dibujarTexto("ESPACIO: caer   C: guardar   D/A: deshacer/rehacer",
-                 px, 652, 16, Color(140, 140, 150));
-    dibujarTexto("P/Esc: pausa    R: replay", px, 674, 16,
-                 Color(140, 140, 150));
 }
 
 bool Juego::clicEnBotonPausa(int x, int y) const {
@@ -712,16 +701,12 @@ bool Juego::clicEnBotonPausa(int x, int y) const {
 }
 
 void Juego::dibujarBotonPausa() const {
-    RectangleShape boton(Vector2f((float)BTN_PAUSA_ANCHO,
-                                  (float)BTN_PAUSA_ALTO));
+    RectangleShape boton(Vector2f((float)BTN_PAUSA_ANCHO,(float)BTN_PAUSA_ALTO));
     boton.setPosition((float)BTN_PAUSA_X, (float)BTN_PAUSA_Y);
-    boton.setFillColor(Color(255, 255, 255, 30));
-    boton.setOutlineColor(Color(180, 180, 190));
+    boton.setFillColor(Color(255, 255, 255, 0));
+    boton.setOutlineColor(Color(180, 180, 190, 0));
     boton.setOutlineThickness(2.0f);
     ventana.draw(boton);
-
-    dibujarTexto("PAUSA", BTN_PAUSA_X + 4, BTN_PAUSA_Y + 5, 16,
-                 Color(255, 255, 255));
 }
 
 void Juego::dibujarPausa() {
@@ -734,28 +719,15 @@ void Juego::dibujarPausa() {
 }
 
 void Juego::dibujarReplayOverlay() {
-    RectangleShape barra(Vector2f((float)VENTANA_ANCHO, 46.0f));
-    barra.setPosition(0.0f, (float)(VENTANA_ALTO - 46));
-    barra.setFillColor(Color(10, 10, 16, 220));
-    ventana.draw(barra);
-
     int pasoActual = historial.ordenActual() + 1;
     int total = historial.tamano();
-    string txt = "REPLAY  paso ";
-    txt = txt + to_string(pasoActual);
-    txt = txt + " de ";
-    txt = txt + to_string(total);
-    txt = txt + "   (IZQ/DER: atras/adelante   Enter: menu)";
-    dibujarTexto(txt, 60, VENTANA_ALTO - 40, 20, Color(255, 220, 60));
+    string txt = to_string(pasoActual)+ " de "+ to_string(total);
+    Text t(txt, fuente, 25);
+    FloatRect b = t.getLocalBounds();
+    dibujarTexto(txt, PX_HOLD + 45 - (int)(b.width / 2), 570, 20,Color(255, 220, 60));
 }
 
 void Juego::dibujarMenu() {
-    dibujarTexto("TETRIS", 330, 120, 80, Color(255, 220, 60));
-    dibujarTexto("Estructuras de Datos - Proyecto 1",
-                 280, 220, 26, Color(220, 220, 220));
-    dibujarTexto("Anddy Zuniga - UNA 2026 II",
-                 320, 258, 20, Color(150, 150, 150));
-
     const char* opciones[3];
     opciones[0] = "Jugar";
     opciones[1] = "Ver ranking";
@@ -784,8 +756,7 @@ void Juego::dibujarMenu() {
             colorBoton = colorBase;
         }
 
-        RectangleShape boton(Vector2f((float)MENU_BTN_ANCHO,
-                                      (float)MENU_BTN_ALTO));
+        RectangleShape boton(Vector2f((float)MENU_BTN_ANCHO,(float)MENU_BTN_ALTO));
         boton.setPosition((float)MENU_BTN_X, (float)y);
         boton.setFillColor(colorBoton);
         if (i == seleccionMenu) {
@@ -794,20 +765,18 @@ void Juego::dibujarMenu() {
         }
         ventana.draw(boton);
 
-        RectangleShape brillo(Vector2f((float)MENU_BTN_ANCHO,
-                                       (float)MENU_BTN_ALTO));
+        RectangleShape brillo(Vector2f((float)MENU_BTN_ANCHO,(float)MENU_BTN_ALTO));
         brillo.setPosition((float)MENU_BTN_X, (float)y);
         brillo.setFillColor(Color(255, 255, 255, 28));
         ventana.draw(brillo);
 
-        dibujarTexto(opciones[i], MENU_BTN_X + 20, y + 8, 26,
-                     Color(255, 255, 255));
+        Text t(opciones[i], fuente, 26);
+        FloatRect b = t.getLocalBounds();
+        dibujarTexto(opciones[i],MENU_BTN_X + (MENU_BTN_ANCHO - (int)b.width) / 2,
+		             y + 8, 26, Color(255, 255, 255));
 
         y = y + MENU_BTN_SEPARACION;
     }
-
-    dibujarTexto("Enter o click: elegir     Esc: salir",
-                 360, 520, 18, Color(140, 140, 150));
 }
 
 void Juego::dibujarGameOver() {

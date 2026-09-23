@@ -38,6 +38,10 @@ private:
     const Font& fuente;
     Texture texturaJuego;
     Sprite fondoJuego;
+    Texture texturaReplay;
+    Sprite fondoReplay;
+    Texture texturaMenu;
+    Sprite fondoMenu;
     Clock relojGravedad;
     Clock relojMarco;
     Clock relojReplay;
