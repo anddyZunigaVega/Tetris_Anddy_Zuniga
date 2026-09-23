@@ -74,13 +74,13 @@ void compararOrdenamientos() {
     int t;
 
     printf("%-8s %-16s %-14s %s\n",
-           "Tamano", "Insercion (ms)", "Quick (ms)", "Iguales");
+           "Tamano", "Insercion (ms)", "Quick (ms)", "Ordena Igual");
 
     ofstream archivo("ordenamientos.txt");
     if (archivo.is_open()) {
         archivo << "# Comparacion de algoritmos de ordenamiento\n";
         archivo << "# Insercion: O(n^2)  |  Quicksort: O(n log n)\n";
-        archivo << "Tamano Insercion_ms Quick_ms Iguales\n";
+        archivo << "Tamano Insercion_ms Quick_ms Ordena_Igual\n";
     }
 
     for (t = 0; t < 4; t++) {

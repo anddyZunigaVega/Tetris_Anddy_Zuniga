@@ -46,7 +46,7 @@ void Tablero::limpiar() {
     }
 }
 
-int* Tablero::fila(int i) {
+int* Tablero::getFila(int i) {
     int* resultado = 0;
     NodoFila* n = cabeza;
     int k;
@@ -61,7 +61,7 @@ int* Tablero::fila(int i) {
     return resultado;
 }
 
-const int* Tablero::fila(int i) const {
+const int* Tablero::getFila(int i) const {
     const int* resultado = 0;
     NodoFila* n = cabeza;
     int k;
@@ -76,30 +76,30 @@ const int* Tablero::fila(int i) const {
     return resultado;
 }
 
-void Tablero::setCelda(int f, int c, int valor) {
-    int* filaP = fila(f);
+void Tablero::setCelda(int fila, int col, int valor) {
+    int* filaP = getFila(fila);
     if (filaP != 0) {
-        filaP[c] = valor;
+        filaP[col] = valor;
     }
 }
 
-int Tablero::getCelda(int f, int c) const {
+int Tablero::getCelda(int fila, int col) const {
     int resultado = 0;
-    const int* filaP = fila(f);
+    const int* filaP = getFila(fila);
     if (filaP != 0) {
-        resultado = filaP[c];
+        resultado = filaP[col];
     }
     return resultado;
 }
 
-bool Tablero::colision(int tipo, int rot, int f, int c) const {
+bool Tablero::colision(int tipo, int rot, int fila, int col) const {
     int n = numCeldas(tipo);
     int k;
     for (k = 0; k < n; k++) {
-        int df = CELDAS[tipo][rot][k][0];
-        int dc = CELDAS[tipo][rot][k][1];
-        int rf = f + df;
-        int rc = c + dc;
+		int df = CELDAS[tipo][rot][k][0];   // desplazamiento de fila
+		int dc = CELDAS[tipo][rot][k][1];   // desplazamiento de columna
+		int rf = fila + df;                 // fila real del bloque
+		int rc = col + dc;                  // columna real del bloque
         if (rf < 0) {
             return true;
         }
@@ -119,14 +119,14 @@ bool Tablero::colision(int tipo, int rot, int f, int c) const {
     return false;
 }
 
-void Tablero::ponesFicha(int tipo, int rot, int f, int c) {
+void Tablero::ponesFicha(int tipo, int rot, int fila, int col) {
     int n = numCeldas(tipo);
     int k;
     for (k = 0; k < n; k++) {
         int df = CELDAS[tipo][rot][k][0];
         int dc = CELDAS[tipo][rot][k][1];
-        int rf = f + df;
-        int rc = c + dc;
+        int rf = fila + df;
+        int rc = col + dc;
         setCelda(rf, rc, tipo + 1);
     }
 }

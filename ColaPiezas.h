@@ -5,7 +5,7 @@ const int COLA_CAPACIDAD = 21;
 
 // Cola FIFO de piezas implementada con buffer circular.
 // Se rellena con el algoritmo "7-bag": cada saco contiene las
-// 7 piezas del Tetris en orden aleatorio (Fisher-Yates).
+// 7 piezas del Tetris en orden aleatorio.
 class ColaPiezas {
 private:
     int buffer[COLA_CAPACIDAD];
@@ -23,8 +23,8 @@ public:
     int tamano() const;
     int proximo(int k) const;
     void rellenarSiFalta();
-    void exportar(int* buf, int& frente, int& tam) const;
-    void restaurar(const int* buf, int frente, int tam);
+    void copiarA(int* buf, int& frente, int& tam) const;
+    void copiarDesde(const int* buf, int frente, int tam);
 };
 
 #endif

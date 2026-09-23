@@ -23,8 +23,8 @@ public:
     Tablero();
     ~Tablero();
     void limpiar();
-    int* fila(int i);
-    const int* fila(int i) const;
+    int* getFila(int i);
+    const int* getFila(int i) const;
     void setCelda(int fila, int col, int valor);
     int getCelda(int fila, int col) const;
     void ponesFicha(int tipo, int rot, int fila, int col);

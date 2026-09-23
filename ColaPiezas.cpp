@@ -81,7 +81,7 @@ void ColaPiezas::rellenarSiFalta() {
     }
 }
 
-void ColaPiezas::exportar(int* buf, int& f, int& t) const {
+void ColaPiezas::copiarA(int* buf, int& f, int& t) const {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
         buf[i] = buffer[i];
@@ -90,7 +90,7 @@ void ColaPiezas::exportar(int* buf, int& f, int& t) const {
     t = tam;
 }
 
-void ColaPiezas::restaurar(const int* buf, int nFrente, int nTam) {
+void ColaPiezas::copiarDesde(const int* buf, int nFrente, int nTam) {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
         buffer[i] = buf[i];

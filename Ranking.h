@@ -28,7 +28,7 @@ public:
     int getCantidad() const;
     Registro obtener(int i) const;
     void imprimir() const;
-    void setAlgoritmo(int a);
+    void elegirAlgoritmo(int a);
     void reordenar();
 };
 

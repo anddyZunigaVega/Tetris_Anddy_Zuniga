@@ -6,11 +6,11 @@ using namespace sf;
 
 using namespace std;
 
-const int PX_TABLERO = VENTANA_ANCHO - COLS_TABLERO * TAM_CELDA - 40;
+const int PX_TABLERO = VENTANA_ANCHO - COLS_TABLERO * TAM_CELDA - 80;
 const int PY_TABLERO = 40;
 const int PX_PANEL = 40;
 const int PX_HOLD = (PX_TABLERO + PX_PANEL) / 2;
-const int TAM_PREVIEW = 18;
+const int TAM_PREVIEW = 20;
 const int TAM_HOLD = 22;
 const int MENU_BTN_X = 360;
 const int MENU_BTN_Y = 330;
@@ -23,6 +23,11 @@ const Color COLOR_MENU_VERDE = Color(52, 168, 83);
 const Color COLOR_MENU_VERDE_MOUSE = Color(96, 210, 124);
 const Color COLOR_MENU_ROJO = Color(219, 68, 55);
 const Color COLOR_MENU_ROJO_MOUSE = Color(245, 105, 90);
+
+const int BTN_PAUSA_X = 912;
+const int BTN_PAUSA_Y = 8;
+const int BTN_PAUSA_ANCHO = 60;
+const int BTN_PAUSA_ALTO = 30;
 
 Juego::Juego(RenderWindow& ventana, const Font& fuente)
     : ventana(ventana), fuente(fuente) {
@@ -45,6 +50,7 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     parpadeoMs = 0;
     algoritmoRanking = 0;
     relojGravedad.restart();
+    relojMarco.restart();
 }
 
 void Juego::correr() {
@@ -60,6 +66,7 @@ void Juego::reiniciarPartida() {
     colaPiezas = ColaPiezas();
     colaPiezas.rellenarSiFalta();
     pilaHold.vaciar();
+    historial.limpiar();
     tipoActual = -1;
     rotActual = 0;
     filaActual = 0;
@@ -72,6 +79,8 @@ void Juego::reiniciarPartida() {
     nombreJugador = "";
     nFilasBorrar = 0;
     parpadeoMs = 0;
+    relojGravedad.restart();
+    relojMarco.restart();
 }
 
 void Juego::generarPieza() {
@@ -87,7 +96,12 @@ void Juego::generarPieza() {
         } else {
             estado = GAME_OVER;
         }
+        return;
     }
+
+    Estado e;
+    capturarEstado(e);
+    historial.agregarEstado(e);
 }
 
 bool Juego::piezaPuede(int f, int c, int r) const {
@@ -102,6 +116,18 @@ void Juego::gravedad() {
     } else {
         bloquearPieza();
     }
+}
+
+void Juego::caerInstantaneo() {
+    int pasos = 0;
+    bool puede = piezaPuede(filaActual + 1, colActual, rotActual);
+    while (puede) {
+        filaActual = filaActual + 1;
+        pasos = pasos + 1;
+        puede = piezaPuede(filaActual + 1, colActual, rotActual);
+    }
+    puntaje = puntaje + 2 * pasos;
+    bloquearPieza();
 }
 
 void Juego::bloquearPieza() {
@@ -123,6 +149,7 @@ void Juego::bloquearPieza() {
     }
 
     generarPieza();
+    relojGravedad.restart();
 }
 
 int Juego::puntajePorLineas(int n) const {
@@ -138,6 +165,88 @@ int Juego::puntajePorLineas(int n) const {
     return 1200;
 }
 
+void Juego::capturarEstado(Estado& e) const {
+    int f;
+    int c;
+    for (f = 0; f < FILAS_TABLERO; f++) {
+        for (c = 0; c < COLS_TABLERO; c++) {
+            e.celdas[f][c] = tablero.getCelda(f, c);
+        }
+    }
+    colaPiezas.copiarA(e.colaBuf, e.colaFrente, e.colaTam);
+    e.tipoActual = tipoActual;
+    e.rotActual = rotActual;
+    e.filaActual = filaActual;
+    e.colActual = colActual;
+    e.puntaje = puntaje;
+    e.nivel = nivel;
+    e.lineas = lineas;
+
+    if (pilaHold.vacia()) {
+        e.tipoHold = -1;
+    } else {
+        e.tipoHold = pilaHold.arriba();
+    }
+
+    int k;
+    for (k = 0; k < 3; k++) {
+        if (k < colaPiezas.tamano()) {
+            e.siguientes[k] = colaPiezas.proximo(k);
+        } else {
+            e.siguientes[k] = -1;
+        }
+    }
+}
+
+void Juego::restaurarEstado(const Estado& e) {
+    tablero.limpiar();
+    int f;
+    int c;
+    for (f = 0; f < FILAS_TABLERO; f++) {
+        for (c = 0; c < COLS_TABLERO; c++) {
+            tablero.setCelda(f, c, e.celdas[f][c]);
+        }
+    }
+    colaPiezas.copiarDesde(e.colaBuf, e.colaFrente, e.colaTam);
+    tipoActual = e.tipoActual;
+    rotActual = e.rotActual;
+    filaActual = e.filaActual;
+    colActual = e.colActual;
+    puntaje = e.puntaje;
+    nivel = e.nivel;
+    lineas = e.lineas;
+    pilaHold.vaciar();
+    if (e.tipoHold >= 0) {
+        pilaHold.push(e.tipoHold);
+    }
+    holdUsado = false;
+    nFilasBorrar = 0;
+    parpadeoMs = 0;
+    relojGravedad.restart();
+}
+
+void Juego::deshacer() {
+    bool ok = historial.deshacer();
+    if (ok) {
+        restaurarEstado(historial.obtenerActual());
+        estado = JUGANDO;
+    }
+}
+
+void Juego::rehacer() {
+    bool ok = historial.rehacer();
+    if (ok) {
+        restaurarEstado(historial.obtenerActual());
+    }
+}
+
+void Juego::iniciarReplay() {
+    historial.irAlInicio();
+    restaurarEstado(historial.obtenerActual());
+    relojReplay.restart();
+    estado = REPLAY;
+}
+
 void Juego::usarHold() {
     if (holdUsado) {
         return;
@@ -149,6 +258,7 @@ void Juego::usarHold() {
     if (pilaHold.vacia()) {
         pilaHold.push(tipoActual);
         generarPieza();
+        holdUsado = true;
     } else {
         int intercambio = pilaHold.pop();
         pilaHold.push(tipoActual);
@@ -229,15 +339,22 @@ void Juego::procesarEventos() {
         }
 
         if (evento.type == Event::MouseButtonPressed) {
-            if (evento.mouseButton.button == Mouse::Left) {
-                if (estado == MENU) {
-                    int i = opcionEn(evento.mouseButton.x, evento.mouseButton.y);
-                    if (i >= 0) {
-                        seleccionMenu = i;
-                        activarOpcion();
-                    }
+if (evento.mouseButton.button == Mouse::Left) {
+            if (estado == JUGANDO) {
+                if (clicEnBotonPausa(evento.mouseButton.x,evento.mouseButton.y)) {
+                    relojGravedad.restart();
+                    relojMarco.restart();
+                    estado = PAUSA;
                 }
             }
+            if (estado == MENU) {
+                int i = opcionEn(evento.mouseButton.x, evento.mouseButton.y);
+                if (i >= 0) {
+                    seleccionMenu = i;
+                    activarOpcion();
+                }
+            }
+        }
             continue;
         }
 
@@ -293,38 +410,72 @@ void Juego::procesarEventos() {
             } else if (tecla == Keyboard::Down || tecla == Keyboard::S) {
                 if (piezaPuede(filaActual + 1, colActual, rotActual)) {
                     filaActual = filaActual + 1;
+                    puntaje = puntaje + 1;
                 } else {
                     bloquearPieza();
                 }
+                relojGravedad.restart();
             } else if (tecla == Keyboard::Space) {
-                bool puede = piezaPuede(filaActual + 1, colActual, rotActual);
-                while (puede) {
-                    filaActual = filaActual + 1;
-                    puede = piezaPuede(filaActual + 1, colActual, rotActual);
-                }
-                bloquearPieza();
+                caerInstantaneo();
             } else if (tecla == Keyboard::C) {
                 usarHold();
-            } else if (tecla == Keyboard::Return ||
-                       tecla == Keyboard::Escape) {
+            } else if (tecla == Keyboard::Z) {
+                deshacer();
+            } else if (tecla == Keyboard::Y) {
+                rehacer();
+            } else if (tecla == Keyboard::P || tecla == Keyboard::Escape) {
+                relojGravedad.restart();
+                relojMarco.restart();
+                estado = PAUSA;
+            }
+        } else if (estado == PAUSA) {
+            if (tecla == Keyboard::P) {
+                relojGravedad.restart();
+                relojMarco.restart();
+                estado = JUGANDO;
+            } else if (tecla == Keyboard::R) {
+                if (historial.tamano() > 0) {
+                    iniciarReplay();
+                }
+            } else if (tecla == Keyboard::Escape) {
                 estado = MENU;
             }
         } else if (estado == GAME_OVER) {
-            if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+            if (tecla == Keyboard::R) {
+                if (historial.tamano() > 0) {
+                    iniciarReplay();
+                }
+            } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
                 estado = MENU;
             }
         } else if (estado == INGRESAR_NOMBRE) {
             if (tecla == Keyboard::Escape) {
                 estado = GAME_OVER;
             }
+        } else if (estado == REPLAY) {
+            if (tecla == Keyboard::Left || tecla == Keyboard::A) {
+                bool ok = historial.deshacer();
+                if (ok) {
+                    restaurarEstado(historial.obtenerActual());
+                    relojReplay.restart();
+                }
+            } else if (tecla == Keyboard::Right || tecla == Keyboard::D) {
+                bool ok = historial.avanzar();
+                if (ok) {
+                    restaurarEstado(historial.obtenerActual());
+                    relojReplay.restart();
+                }
+            } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+                estado = MENU;
+            }
         } else if (estado == VER_RANKING) {
             if (tecla == Keyboard::Num1) {
                 algoritmoRanking = 0;
-                ranking.setAlgoritmo(algoritmoRanking);
+                ranking.elegirAlgoritmo(algoritmoRanking);
                 ranking.reordenar();
             } else if (tecla == Keyboard::Num2) {
                 algoritmoRanking = 1;
-                ranking.setAlgoritmo(algoritmoRanking);
+                ranking.elegirAlgoritmo(algoritmoRanking);
                 ranking.reordenar();
             } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
                 estado = MENU;
@@ -334,31 +485,41 @@ void Juego::procesarEventos() {
 }
 
 void Juego::actualizar() {
-    if (estado != JUGANDO) {
-        return;
-    }
-    Time dt = relojGravedad.getElapsedTime();
+    Time dt = relojMarco.restart();
     int ms = dt.asMilliseconds();
-    tiempoMs = tiempoMs + ms;
 
-    if (nFilasBorrar > 0) {
-        parpadeoMs = parpadeoMs + ms;
-        if (parpadeoMs >= 400) {
-            lineas = lineas + nFilasBorrar;
-            puntaje = puntaje + puntajePorLineas(nFilasBorrar) * nivel;
-            nivel = lineas / 10 + 1;
-            tablero.borrarFilas(filasBorrar, nFilasBorrar);
-            nFilasBorrar = 0;
-            parpadeoMs = 0;
-            relojGravedad.restart();
-            generarPieza();
+    if (estado == JUGANDO) {
+        tiempoMs = tiempoMs + ms;
+
+        if (nFilasBorrar > 0) {
+            parpadeoMs = parpadeoMs + ms;
+            if (parpadeoMs >= 400) {
+                lineas = lineas + nFilasBorrar;
+                puntaje = puntaje + puntajePorLineas(nFilasBorrar) * nivel;
+                nivel = lineas / 10 + 1;
+                tablero.borrarFilas(filasBorrar, nFilasBorrar);
+                nFilasBorrar = 0;
+                parpadeoMs = 0;
+                relojGravedad.restart();
+                generarPieza();
+            }
+            return;
         }
-        return;
-    }
 
-    if (ms >= VELOCIDAD_CAIDA_MS) {
-        relojGravedad.restart();
-        gravedad();
+        int msGravedad = relojGravedad.getElapsedTime().asMilliseconds();
+        if (msGravedad >= VELOCIDAD_CAIDA_MS) {
+            relojGravedad.restart();
+            gravedad();
+        }
+    } else if (estado == REPLAY) {
+        int msReplay = relojReplay.getElapsedTime().asMilliseconds();
+        if (msReplay >= 400) {
+            relojReplay.restart();
+            bool siguiente = historial.avanzar();
+            if (siguiente) {
+                restaurarEstado(historial.obtenerActual());
+            }
+        }
     }
 }
 
@@ -366,7 +527,7 @@ void Juego::render() {
     ventana.clear(Color(40, 40, 45));
 
     if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER ||
-        estado == INGRESAR_NOMBRE) {
+        estado == INGRESAR_NOMBRE || estado == PAUSA) {
         dibujarFondo();
         if (estado == MENU) {
             dibujarMenu();
@@ -374,6 +535,8 @@ void Juego::render() {
             dibujarRanking(260, 110, true);
         } else if (estado == GAME_OVER || estado == INGRESAR_NOMBRE) {
             dibujarGameOver();
+        } else if (estado == PAUSA) {
+            dibujarPausa();
         }
         ventana.display();
         return;
@@ -381,6 +544,13 @@ void Juego::render() {
 
     dibujarTablero();
     dibujarPanel();
+
+    if (estado == JUGANDO) {
+        dibujarBotonPausa();
+    } else if (estado == REPLAY) {
+        dibujarReplayOverlay();
+    }
+
     ventana.display();
 }
 
@@ -391,7 +561,7 @@ void Juego::dibujarFondo() {
 }
 
 void Juego::dibujarTexto(const string& s, int x, int y, unsigned tam,
-                         const Color& color) const {
+						 const Color& color) const {
     Text t;
     t.setFont(fuente);
     t.setString(s);
@@ -462,8 +632,7 @@ void Juego::dibujarTablero() {
             if (v == 0) {
                 continue;
             }
-            celda.setSize(Vector2f((float)(TAM_CELDA - 2),
-                                   (float)(TAM_CELDA - 2)));
+            celda.setSize(Vector2f((float)(TAM_CELDA - 2),(float)(TAM_CELDA - 2)));
             Color colorCelda = colorDeTipo(v - 1);
             int b;
             bool parpadea = false;
@@ -476,16 +645,15 @@ void Juego::dibujarTablero() {
                 colorCelda = Color(255, 255, 255);
             }
             celda.setFillColor(colorCelda);
-            celda.setPosition((float)(PX_TABLERO + c * TAM_CELDA + 1),
-                              (float)(PY_TABLERO + f * TAM_CELDA + 1));
+            celda.setPosition((float)(PX_TABLERO + c * TAM_CELDA + 1), 
+							   (float)(PY_TABLERO + f * TAM_CELDA + 1));
             ventana.draw(celda);
         }
     }
 
-    if (tipoActual >= 0) {
-        dibujarPiezaEn(tipoActual, rotActual,
-                       PX_TABLERO + colActual * TAM_CELDA,
-                       PY_TABLERO + filaActual * TAM_CELDA, TAM_CELDA);
+    if (tipoActual >= 0 && nFilasBorrar == 0) {
+        dibujarPiezaEn(tipoActual, rotActual,PX_TABLERO + colActual * TAM_CELDA,PY_TABLERO 
+					                                    + filaActual * TAM_CELDA, TAM_CELDA);
     }
 }
 
@@ -514,7 +682,7 @@ void Juego::dibujarPanel() {
             int pieza = colaPiezas.proximo(k);
             dibujarPiezaEn(pieza, 0, px + 8, yPrev, TAM_PREVIEW);
         }
-        yPrev = yPrev + 70;
+        yPrev = yPrev + 96;
     }
 
     dibujarTexto("GUARDADA (C)", PX_HOLD, 45, 20, Color(180, 180, 190));
@@ -524,12 +692,55 @@ void Juego::dibujarPanel() {
     }
     dibujarPiezaEn(tipoHold, 0, PX_HOLD + 8, 70, TAM_HOLD);
 
-    dibujarTexto("IZQ/DER: mover    ARRIBA/X: rotar",
+    dibujarTexto("IZQ/DER: mover   ARRIBA/X: rotar   ABAJO: bajar",
                  px, 630, 16, Color(140, 140, 150));
-    dibujarTexto("ABAJO/ESPACIO: bajar/caer    C: guardar",
+    dibujarTexto("ESPACIO: caer   C: guardar   Z/Y: deshacer/rehacer",
                  px, 652, 16, Color(140, 140, 150));
-    dibujarTexto("Enter/Esc: volver al menu",
-                 px, 674, 16, Color(140, 140, 150));
+    dibujarTexto("P/Esc: pausa    R: replay", px, 674, 16,
+                 Color(140, 140, 150));
+}
+
+bool Juego::clicEnBotonPausa(int x, int y) const {
+    return x >= BTN_PAUSA_X && x < BTN_PAUSA_X + BTN_PAUSA_ANCHO &&
+           y >= BTN_PAUSA_Y && y < BTN_PAUSA_Y + BTN_PAUSA_ALTO;
+}
+
+void Juego::dibujarBotonPausa() const {
+    RectangleShape boton(Vector2f((float)BTN_PAUSA_ANCHO,
+                                  (float)BTN_PAUSA_ALTO));
+    boton.setPosition((float)BTN_PAUSA_X, (float)BTN_PAUSA_Y);
+    boton.setFillColor(Color(255, 255, 255, 30));
+    boton.setOutlineColor(Color(180, 180, 190));
+    boton.setOutlineThickness(2.0f);
+    ventana.draw(boton);
+
+    dibujarTexto("PAUSA", BTN_PAUSA_X + 4, BTN_PAUSA_Y + 5, 16,
+                 Color(255, 255, 255));
+}
+
+void Juego::dibujarPausa() {
+    dibujarTexto("PAUSA", 370, 130, 80, Color(255, 220, 60));
+    dibujarTexto("P: continuar", 390, 260, 30, Color(220, 220, 220));
+    dibujarTexto("R: reproducir partida", 390, 310, 30, Color(220, 220, 220));
+    dibujarTexto("Esc: salir de partida", 390, 360, 30, Color(220, 220, 220));
+    dibujarTexto("(si sales se pierde la partida actual)",
+                 350, 425, 20, Color(150, 150, 150));
+}
+
+void Juego::dibujarReplayOverlay() {
+    RectangleShape barra(Vector2f((float)VENTANA_ANCHO, 46.0f));
+    barra.setPosition(0.0f, (float)(VENTANA_ALTO - 46));
+    barra.setFillColor(Color(10, 10, 16, 220));
+    ventana.draw(barra);
+
+    int pasoActual = historial.ordenActual() + 1;
+    int total = historial.tamano();
+    string txt = "REPLAY  paso ";
+    txt = txt + to_string(pasoActual);
+    txt = txt + " de ";
+    txt = txt + to_string(total);
+    txt = txt + "   (IZQ/DER: atras/adelante   Enter: menu)";
+    dibujarTexto(txt, 60, VENTANA_ALTO - 40, 20, Color(255, 220, 60));
 }
 
 void Juego::dibujarMenu() {
@@ -611,7 +822,8 @@ void Juego::dibujarGameOver() {
     string txtPuntaje2 = "Puntaje: " + to_string(puntaje);
     dibujarTexto(txtPuntaje2, 350, 190, 34, Color(255, 220, 60));
     dibujarRanking(330, 250, true);
-    dibujarTexto("Enter: menu", 330, 620, 20, Color(140, 140, 150));
+    dibujarTexto("R: ver replay   |   Enter: menu",
+                 330, 620, 20, Color(140, 140, 150));
 }
 
 void Juego::dibujarRanking(int px, int py, bool conTitulo) {

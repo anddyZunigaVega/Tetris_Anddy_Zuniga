@@ -49,7 +49,7 @@ void Ranking::ordenarTop() {
     ordenarRegistrosInsercion(top, cantidad);
 }
 
-void Ranking::setAlgoritmo(int a) {
+void Ranking::elegirAlgoritmo(int a) {
     algoritmo = a;
     ordenarTop();
 }

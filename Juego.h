@@ -8,6 +8,7 @@
 #include "Tablero.h"
 #include "ColaPiezas.h"
 #include "Pila.h"
+#include "ListaDoble.h"
 #include "Ranking.h"
 
 using namespace sf;
@@ -21,12 +22,14 @@ const int VELOCIDAD_CAIDA_MS = 700;
 enum EstadoJuego {
     MENU,
     JUGANDO,
+    PAUSA,
     VER_RANKING,
     GAME_OVER,
-    INGRESAR_NOMBRE
+    INGRESAR_NOMBRE,
+    REPLAY
 };
 
-// Version en avance: interfaz como TetrisB, con la pieza cayendo por
+// Version en avance: interfaz TetrisA, con la pieza cayendo por
 // gravedad y pudiendo moverse/rotar. La logica de puntos y lineas
 // completas se agrega en los proximos pasos.
 class Juego {
@@ -34,12 +37,15 @@ private:
     RenderWindow& ventana;
     const Font& fuente;
     Clock relojGravedad;
+    Clock relojMarco;
+    Clock relojReplay;
     EstadoJuego estado;
     int seleccionMenu;
 
     Tablero tablero;
     ColaPiezas colaPiezas;
     Pila pilaHold;
+    ListaDoble historial;
     Ranking ranking;
 
     int tipoActual;
@@ -61,12 +67,18 @@ private:
     void generarPieza();
     bool piezaPuede(int f, int c, int r) const;
     void gravedad();
+    void caerInstantaneo();
     void bloquearPieza();
     void usarHold();
     int puntajePorLineas(int n) const;
     void guardarRanking();
     void activarOpcion();
     int opcionEn(int x, int y) const;
+    void capturarEstado(Estado& e) const;
+    void restaurarEstado(const Estado& e);
+    void deshacer();
+    void rehacer();
+    void iniciarReplay();
 
     void procesarEventos();
     void actualizar();
@@ -79,9 +91,13 @@ private:
     void dibujarTablero();
     void dibujarPanel();
     void dibujarMenu();
+    void dibujarPausa();
     void dibujarGameOver();
+    void dibujarReplayOverlay();
     void dibujarRanking(int px, int py, bool conTitulo);
     void dibujarProximamente(const string& titulo);
+    bool clicEnBotonPausa(int x, int y) const;
+    void dibujarBotonPausa() const;
     void dibujarPiezaEn(int tipo, int rot, int px, int py, int tam) const;
 
 public:

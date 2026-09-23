@@ -1,0 +1,7 @@
+# Comparacion de algoritmos de ordenamiento
+# Insercion: O(n^2)  |  Quicksort: O(n log n)
+Tamano Insercion_ms Quick_ms Ordena_Igual
+10       0.000            0.000          SI
+100      0.000            0.000          SI
+1000     0.000            0.000          SI
+10000    46.996           0.000          SI
