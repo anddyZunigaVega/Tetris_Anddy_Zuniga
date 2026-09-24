@@ -1,7 +1,11 @@
-# Comparacion de algoritmos de ordenamiento
-# Insercion: O(n^2)  |  Quicksort: O(n log n)
-Tamano Insercion_ms Quick_ms Ordena_Igual
-10       0.000            0.000          SI
-100      0.000            0.000          SI
-1000     0.000            0.000          SI
-10000    43.324           0.000          SI
+=== Comparacion de algoritmos de ordenamiento ===
+Insercion (O(n^2)) vs Quicksort (O(n log n))
+# Tiempo promedio de 10 corridas por algoritmo, en milisegundos
+Tamano Insercion_ms Quick_ms Mismo_resultado Tiempo_igual
+10       0.000          0.000        SI               SI
+100      0.000          0.000        SI               SI
+1000     0.350          0.000        SI               NO
+10000    32.740         0.723        SI               NO
+
+Para 10000 datos: insercion 0.0327401 s, quicksort 0.000723 s
+Resultados guardados en ordenamientos.txt

@@ -35,8 +35,9 @@ Juego::Juego(RenderWindow& ventana, const Font& fuente)
     tablero.limpiar();
     colaPiezas = ColaPiezas();
     colaPiezas.rellenarSiFalta();
-    estado = MENU;
+estado = MENU;
     seleccionMenu = 0;
+    replayDesdeGameOver = false;
     tipoActual = -1;
     rotActual = 0;
     filaActual = 0;
@@ -64,6 +65,18 @@ algoritmoRanking = 0;
         cout << "Aviso: no se encontro assets/imagenes/mainMenu.png\n";
     }
     fondoMenu.setTexture(texturaMenu);
+    if (!texturaPausa.loadFromFile("assets/imagenes/pausa.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/pausa.png\n";
+    }
+    fondoPausa.setTexture(texturaPausa);
+    if (!texturaGameOver.loadFromFile("assets/imagenes/fondoGameOver.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/fondoGameOver.png\n";
+    }
+    fondoGameOver.setTexture(texturaGameOver);
+    if (!texturaRanking.loadFromFile("assets/imagenes/ranking.png")) {
+        cout << "Aviso: no se encontro assets/imagenes/ranking.png\n";
+    }
+    fondoRanking.setTexture(texturaRanking);
 }
 
 void Juego::correr() {
@@ -103,12 +116,8 @@ void Juego::generarPieza() {
     filaActual = PIEZA_SPAWN_FILA;
     colActual = PIEZA_SPAWN_COL;
     holdUsado = false;
-    if (!piezaPuede(filaActual, colActual, rotActual)) {
-        if (puntaje > 0) {
-            estado = INGRESAR_NOMBRE;
-        } else {
-            estado = GAME_OVER;
-        }
+if (!piezaPuede(filaActual, colActual, rotActual)) {
+        estado = GAME_OVER;
         return;
     }
 
@@ -254,6 +263,7 @@ void Juego::rehacer() {
 }
 
 void Juego::iniciarReplay() {
+    replayDesdeGameOver = (estado == GAME_OVER);
     historial.irAlInicio();
     restaurarEstado(historial.obtenerActual());
     relojReplay.restart();
@@ -281,12 +291,8 @@ void Juego::usarHold() {
         colActual = PIEZA_SPAWN_COL;
         holdUsado = true;
 
-        if (!piezaPuede(filaActual, colActual, rotActual)) {
-            if (puntaje > 0) {
-                estado = INGRESAR_NOMBRE;
-            } else {
-                estado = GAME_OVER;
-            }
+if (!piezaPuede(filaActual, colActual, rotActual)) {
+            estado = GAME_OVER;
         }
     }
 }
@@ -297,7 +303,7 @@ void Juego::guardarRanking() {
     }
     ranking.agregar(nombreJugador, puntaje);
     ranking.guardar();
-    estado = GAME_OVER;
+    estado = MENU;
 }
 
 void Juego::activarOpcion() {
@@ -371,8 +377,8 @@ if (evento.mouseButton.button == Mouse::Left) {
             continue;
         }
 
-        if (evento.type == Event::TextEntered) {
-            if (estado == INGRESAR_NOMBRE) {
+if (evento.type == Event::TextEntered) {
+            if (estado == GAME_OVER) {
                 if (evento.text.unicode == 8) {
                     if (nombreJugador.size() > 0) {
                         nombreJugador.erase(nombreJugador.size() - 1);
@@ -382,8 +388,7 @@ if (evento.mouseButton.button == Mouse::Left) {
                 } else if (evento.text.unicode >= 32) {
                     if (evento.text.unicode < 127) {
                         if (nombreJugador.size() < 10) {
-                            nombreJugador =
-                                nombreJugador + (char)evento.text.unicode;
+                            nombreJugador = nombreJugador + (char)evento.text.unicode;
                         }
                     }
                 }
@@ -447,17 +452,13 @@ if (tecla == Keyboard::Left) {
             } else if (tecla == Keyboard::Escape) {
                 estado = MENU;
             }
-        } else if (estado == GAME_OVER) {
+} else if (estado == GAME_OVER) {
             if (tecla == Keyboard::R) {
                 if (historial.tamano() > 0) {
                     iniciarReplay();
                 }
-            } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+            } else if (tecla == Keyboard::Escape) {
                 estado = MENU;
-            }
-        } else if (estado == INGRESAR_NOMBRE) {
-            if (tecla == Keyboard::Escape) {
-                estado = GAME_OVER;
             }
         } else if (estado == REPLAY) {
             if (tecla == Keyboard::Left || tecla == Keyboard::A) {
@@ -472,8 +473,12 @@ if (tecla == Keyboard::Left) {
                     restaurarEstado(historial.obtenerActual());
                     relojReplay.restart();
                 }
-            } else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
-                estado = MENU;
+} else if (tecla == Keyboard::Return || tecla == Keyboard::Escape) {
+                if (replayDesdeGameOver) {
+                    estado = GAME_OVER;
+                } else {
+                    estado = MENU;
+                }
             }
         } else if (estado == VER_RANKING) {
             if (tecla == Keyboard::Num1) {
@@ -534,22 +539,28 @@ void Juego::render() {
     ventana.clear(Color(40, 40, 45));
     if (estado == MENU) {
         ventana.draw(fondoMenu);
+    } else if (estado == PAUSA) {
+        ventana.draw(fondoPausa);
     } else if (estado == REPLAY) {
         ventana.draw(fondoReplay);
+    } else if (estado == GAME_OVER) {
+        ventana.draw(fondoGameOver);
+    } else if (estado == VER_RANKING) {
+        ventana.draw(fondoRanking);
     } else {
         ventana.draw(fondoJuego);
     }
 
-    if (estado == MENU || estado == VER_RANKING || estado == GAME_OVER ||
-        estado == INGRESAR_NOMBRE || estado == PAUSA) {
-        if (estado != MENU) {
+    if (estado != JUGANDO && estado != REPLAY) {
+        if (estado != MENU && estado != PAUSA && estado != GAME_OVER
+            && estado != VER_RANKING) {
             dibujarFondo();
         }
         if (estado == MENU) {
             dibujarMenu();
         } else if (estado == VER_RANKING) {
-            dibujarRanking(260, 110, true);
-        } else if (estado == GAME_OVER || estado == INGRESAR_NOMBRE) {
+            dibujarRanking();
+} else if (estado == GAME_OVER) {
             dibujarGameOver();
         } else if (estado == PAUSA) {
             dibujarPausa();
@@ -576,8 +587,7 @@ void Juego::dibujarFondo() {
     ventana.draw(fondo);
 }
 
-void Juego::dibujarTexto(const string& s, int x, int y, unsigned tam,
-						 const Color& color) const {
+void Juego::dibujarTexto(const string& s, int x, int y, unsigned tam, const Color& color) const {
     Text t;
     t.setFont(fuente);
     t.setString(s);
@@ -710,12 +720,6 @@ void Juego::dibujarBotonPausa() const {
 }
 
 void Juego::dibujarPausa() {
-    dibujarTexto("PAUSA", 370, 130, 80, Color(255, 220, 60));
-    dibujarTexto("P: continuar", 390, 260, 30, Color(220, 220, 220));
-    dibujarTexto("R: reproducir partida", 390, 310, 30, Color(220, 220, 220));
-    dibujarTexto("Esc: salir de partida", 390, 360, 30, Color(220, 220, 220));
-    dibujarTexto("(si sales se pierde la partida actual)",
-                 350, 425, 20, Color(150, 150, 150));
 }
 
 void Juego::dibujarReplayOverlay() {
@@ -780,45 +784,27 @@ void Juego::dibujarMenu() {
 }
 
 void Juego::dibujarGameOver() {
-    if (estado == INGRESAR_NOMBRE) {
-        dibujarTexto("FIN DE LA PARTIDA", 280, 130, 60, Color(255, 80, 80));
-        string txtPuntaje = "Puntaje: " + to_string(puntaje);
-        dibujarTexto(txtPuntaje, 350, 210, 34, Color(255, 220, 60));
-        dibujarTexto("Ingresa tu nombre (Enter para guardar)",
-                     300, 290, 24, Color(220, 220, 220));
-        dibujarTexto("Esc: no guardar en el ranking",
-                     300, 325, 20, Color(150, 150, 150));
-        string txtNombre = nombreJugador + "_";
-        dibujarTexto(txtNombre, 360, 370, 40, Color(120, 220, 255));
-        return;
-    }
-
-    dibujarTexto("GAME OVER", 290, 100, 70, Color(255, 80, 80));
-    string txtPuntaje2 = "Puntaje: " + to_string(puntaje);
-    dibujarTexto(txtPuntaje2, 350, 190, 34, Color(255, 220, 60));
-    dibujarRanking(330, 250, true);
-    dibujarTexto("R: ver replay   |   Enter: menu",
-                 330, 620, 20, Color(140, 140, 150));
+    Text t;
+    t.setFont(fuente);
+    t.setString(nombreJugador + "_");
+    t.setCharacterSize(40);
+    t.setFillColor(Color(120, 220, 255));
+    FloatRect b = t.getLocalBounds();
+    t.setPosition(490.0f - b.width / 2.0f, 342.0f);
+    ventana.draw(t);
 }
 
-void Juego::dibujarRanking(int px, int py, bool conTitulo) {
-    int y;
-    if (conTitulo) {
-        string titulo = "RANKING TOP-10";
-        if (algoritmoRanking == 0) {
-            titulo = titulo + "  (insercion)";
-        } else {
-            titulo = titulo + "  (quicksort)";
-        }
-        dibujarTexto(titulo, px, py, 30, Color(255, 220, 60));
-        y = py + 50;
-    } else {
-        y = py;
+void Juego::dibujarRanking() {
+    string indicador = "Insercion";
+    if (algoritmoRanking == 1) {
+        indicador = "Quicksort";
     }
+    dibujarTexto(indicador, 450, 100, 22, Color(255, 220, 60));
 
+    int y = 200;
     int n = ranking.getCantidad();
     if (n == 0) {
-        dibujarTexto("(sin registros)", px, y, 22, Color(150, 150, 150));
+        dibujarTexto("(sin registros)", 420, y, 22, Color(150, 150, 150));
         return;
     }
 
@@ -826,23 +812,15 @@ void Juego::dibujarRanking(int px, int py, bool conTitulo) {
     for (i = 0; i < n; i++) {
         if (i < 10) {
             Registro r = ranking.obtener(i);
-            string linea = to_string(i + 1) + ". " + r.nombre +
-                           "  " + to_string(r.puntos);
-            dibujarTexto(linea, px, y, 22, Color(220, 220, 220));
+            string linea = to_string(i + 1) + ". " + r.nombre + "  " + to_string(r.puntos);
+            dibujarTexto(linea, 420, y, 22, Color(220, 220, 220));
             y = y + 30;
         }
-    }
-
-    if (conTitulo) {
-        dibujarTexto("Teclea 1=insercion  2=quicksort para cambiar",
-                     px, y + 5, 18, Color(140, 140, 150));
     }
 }
 
 void Juego::dibujarProximamente(const string& titulo) {
     dibujarTexto(titulo, 360, 200, 70, Color(255, 220, 60));
-    dibujarTexto("Proximamente...",
-                 380, 300, 30, Color(200, 200, 200));
-    dibujarTexto("Enter/Esc: volver al menu",
-                 350, 400, 22, Color(140, 140, 150));
+    dibujarTexto("Proximamente...",380, 300, 30, Color(200, 200, 200));
+    dibujarTexto("Enter/Esc: volver al menu",350, 400, 22, Color(140, 140, 150));
 }

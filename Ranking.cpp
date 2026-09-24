@@ -8,8 +8,55 @@ using namespace std;
 
 Ranking::Ranking() {
     cantidad = 0;
+    capacidad = RANKING_MAX;
     algoritmo = 0;
+    top = new Registro[capacidad];
     cargar();
+}
+
+Ranking::Ranking(const Ranking& otro) {
+    cantidad = otro.cantidad;
+    capacidad = otro.capacidad;
+    algoritmo = otro.algoritmo;
+    top = new Registro[capacidad];
+    int i;
+    for (i = 0; i < cantidad; i++) {
+        top[i] = otro.top[i];
+    }
+}
+
+Ranking::~Ranking() {
+    delete[] top;
+}
+
+Ranking& Ranking::operator=(const Ranking& otro) {
+    if (this != &otro) {
+        delete[] top;
+        cantidad = otro.cantidad;
+        capacidad = otro.capacidad;
+        algoritmo = otro.algoritmo;
+        top = new Registro[capacidad];
+        int i;
+        for (i = 0; i < cantidad; i++) {
+            top[i] = otro.top[i];
+        }
+    }
+    return *this;
+}
+
+void Ranking::asegurarCapacidad() {
+    if (cantidad < capacidad) {
+        return;
+    }
+    int nuevaCap = capacidad * 2;
+    Registro* nuevo = new Registro[nuevaCap];
+    int i;
+    for (i = 0; i < cantidad; i++) {
+        nuevo[i] = top[i];
+    }
+    delete[] top;
+    top = nuevo;
+    capacidad = nuevaCap;
 }
 
 void Ranking::cargar() {
@@ -17,23 +64,15 @@ void Ranking::cargar() {
     ifstream archivo("ranking.txt");
     if (archivo.is_open()) {
         string linea;
-        bool seguir = true;
-        while (seguir) {
-            if (getline(archivo, linea)) {
-                if (!linea.empty()) {
-                    string::size_type ultimoEspacio = linea.rfind(' ');
-                    if (ultimoEspacio != string::npos) {
-                        top[cantidad].nombre = linea.substr(0, ultimoEspacio);
-                        int p = atoi(linea.c_str() + ultimoEspacio + 1);
-                        top[cantidad].puntos = p;
-                        cantidad = cantidad + 1;
-                    }
+        while (getline(archivo, linea)) {
+            if (!linea.empty()) {
+                string::size_type ultimoEspacio = linea.rfind(' ');
+                if (ultimoEspacio != string::npos) {
+                    asegurarCapacidad();
+                    top[cantidad].nombre = linea.substr(0, ultimoEspacio);
+                    top[cantidad].puntos = atoi(linea.c_str() + ultimoEspacio + 1);
+                    cantidad = cantidad + 1;
                 }
-                if (cantidad >= RANKING_MAX) {
-                    seguir = false;
-                }
-            } else {
-                seguir = false;
             }
         }
         archivo.close();
@@ -59,22 +98,13 @@ void Ranking::reordenar() {
 }
 
 int Ranking::agregar(const string& nombre, int puntos) {
-    int posicion = -1;
-    if (cantidad < RANKING_MAX) {
-        top[cantidad].nombre = nombre;
-        top[cantidad].puntos = puntos;
-        cantidad = cantidad + 1;
-        ordenarTop();
-    } else {
-        if (puntos > top[RANKING_MAX - 1].puntos) {
-            top[RANKING_MAX - 1].nombre = nombre;
-            top[RANKING_MAX - 1].puntos = puntos;
-            ordenarTop();
-        } else {
-            return -1;
-        }
-    }
+    asegurarCapacidad();
+    top[cantidad].nombre = nombre;
+    top[cantidad].puntos = puntos;
+    cantidad = cantidad + 1;
+    ordenarTop();
 
+    int posicion = -1;
     int i;
     for (i = 0; i < cantidad; i++) {
         if (top[i].puntos == puntos) {

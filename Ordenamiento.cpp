@@ -70,17 +70,26 @@ void compararOrdenamientos() {
     }
 
     const int TAMANOS[4] = {10, 100, 1000, 10000};
+    const int REPETICIONES = 10;
     char linea[256];
     int t;
+    double usIns = 0.0;
+    double usQuick = 0.0;
 
-    printf("%-8s %-16s %-14s %s\n",
-           "Tamano", "Insercion (ms)", "Quick (ms)", "Ordena Igual");
+    printf("=== Comparacion de algoritmos de ordenamiento ===\n");
+    printf("Insercion (O(n^2)) vs Quicksort (O(n log n))\n");
+    printf("# Tiempo promedio de 10 corridas por algoritmo, en milisegundos\n");
+    printf("\n");
+    printf("%-8s %-14s %-12s %-16s %s\n\n",
+           "Tamano", "Insercion (ms)", "Quick (ms)",
+           "Mismo resultado", "Tiempo igual");
 
     ofstream archivo("ordenamientos.txt");
     if (archivo.is_open()) {
-        archivo << "# Comparacion de algoritmos de ordenamiento\n";
-        archivo << "# Insercion: O(n^2)  |  Quicksort: O(n log n)\n";
-        archivo << "Tamano Insercion_ms Quick_ms Ordena_Igual\n";
+        archivo << "=== Comparacion de algoritmos de ordenamiento ===\n";
+        archivo << "Insercion (O(n^2)) vs Quicksort (O(n log n))\n";
+        archivo << "# Tiempo promedio de 10 corridas por algoritmo, en milisegundos\n";
+        archivo << "Tamano Insercion_ms Quick_ms Mismo_resultado Tiempo_igual\n";
     }
 
     for (t = 0; t < 4; t++) {
@@ -93,18 +102,31 @@ void compararOrdenamientos() {
         }
 
         int* a = new int[n];
-        copiarArreglo(datos, a, n);
-        time_point<high_resolution_clock> inicio = high_resolution_clock::now();
-        ordenarInsercion(a, n);
-        time_point<high_resolution_clock> fin = high_resolution_clock::now();
-        double msIns = duration<double, milli>(fin - inicio).count();
+        double totalIns = 0.0;
+        time_point<high_resolution_clock> inicio;
+        time_point<high_resolution_clock> fin;
+        int r;
+        for (r = 0; r < REPETICIONES; r++) {
+            copiarArreglo(datos, a, n);
+            inicio = high_resolution_clock::now();
+            ordenarInsercion(a, n);
+            fin = high_resolution_clock::now();
+            totalIns = totalIns +
+                duration<double, micro>(fin - inicio).count();
+        }
+        usIns = totalIns / REPETICIONES;
 
         int* b = new int[n];
-        copiarArreglo(datos, b, n);
-        inicio = high_resolution_clock::now();
-        ordenarQuick(b, 0, n - 1);
-        fin = high_resolution_clock::now();
-        double msQuick = duration<double, milli>(fin - inicio).count();
+        double totalQuick = 0.0;
+        for (r = 0; r < REPETICIONES; r++) {
+            copiarArreglo(datos, b, n);
+            inicio = high_resolution_clock::now();
+            ordenarQuick(b, 0, n - 1);
+            fin = high_resolution_clock::now();
+            totalQuick = totalQuick +
+                duration<double, micro>(fin - inicio).count();
+        }
+        usQuick = totalQuick / REPETICIONES;
 
         bool iguales = true;
         for (i = 0; i < n; i++) {
@@ -113,15 +135,26 @@ void compararOrdenamientos() {
             }
         }
 
+        long msInsRedondeado = (long)(usIns / 1000.0 * 1000.0 + 0.5);
+        long msQuickRedondeado = (long)(usQuick / 1000.0 * 1000.0 + 0.5);
+        bool tiemposIguales = (msInsRedondeado == msQuickRedondeado);
+
         char resultado[4];
         if (iguales) {
             sprintf(resultado, "SI");
         } else {
             sprintf(resultado, "NO");
         }
+        char tiempoIgual[4];
+        if (tiemposIguales) {
+            sprintf(tiempoIgual, "SI");
+        } else {
+            sprintf(tiempoIgual, "NO");
+        }
 
-        sprintf(linea, "%-8d %-16.3f %-14.3f %s",
-                n, msIns, msQuick, resultado);
+        sprintf(linea, "%-8d %-14.3f %-12.3f %-16s %s",
+                n, usIns / 1000.0, usQuick / 1000.0,
+                resultado, tiempoIgual);
         printf("%s\n", linea);
         if (archivo.is_open()) {
             archivo << linea << "\n";
@@ -132,7 +165,15 @@ void compararOrdenamientos() {
         delete[] b;
     }
 
+    printf("\nPara %d datos: insercion %.6f s, quicksort %.6f s\n",
+           TAMANOS[3], usIns / 1000000.0, usQuick / 1000000.0);
+    printf("Resultados guardados en ordenamientos.txt\n");
+
     if (archivo.is_open()) {
+        archivo << "\nPara " << TAMANOS[3] << " datos: insercion "
+                << usIns / 1000000.0 << " s, quicksort "
+                << usQuick / 1000000.0 << " s\n";
+        archivo << "Resultados guardados en ordenamientos.txt\n";
         archivo.close();
     }
 }

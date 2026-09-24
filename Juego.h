@@ -25,7 +25,6 @@ enum EstadoJuego {
     PAUSA,
     VER_RANKING,
     GAME_OVER,
-    INGRESAR_NOMBRE,
     REPLAY
 };
 
@@ -42,9 +41,16 @@ private:
     Sprite fondoReplay;
     Texture texturaMenu;
     Sprite fondoMenu;
+    Texture texturaPausa;
+    Sprite fondoPausa;
+    Texture texturaGameOver;
+    Sprite fondoGameOver;
+    Texture texturaRanking;
+    Sprite fondoRanking;
     Clock relojGravedad;
     Clock relojMarco;
     Clock relojReplay;
+    bool replayDesdeGameOver;
     EstadoJuego estado;
     int seleccionMenu;
 
@@ -100,7 +106,7 @@ private:
     void dibujarPausa();
     void dibujarGameOver();
     void dibujarReplayOverlay();
-    void dibujarRanking(int px, int py, bool conTitulo);
+    void dibujarRanking();
     void dibujarProximamente(const string& titulo);
     bool clicEnBotonPausa(int x, int y) const;
     void dibujarBotonPausa() const;
