@@ -1,7 +1,7 @@
 #ifndef JUEGO_H
 #define JUEGO_H
 
-#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 #include <string>
 
 #include "Pieza.h"
@@ -29,31 +29,16 @@ enum EstadoJuego {
     REPLAY
 };
 
-// Version en avance: interfaz TetrisA, con la pieza cayendo por
-// gravedad y pudiendo moverse/rotar. La logica de puntos y lineas
-// completas se agrega en los proximos pasos.
+// Version en avance: Juego es el MODELO (logica dura del Tetris) en una
+// arquitectura MVC. No contiene imagen, fondo ni dibujo: la Vista
+// (GestorUI) se comunica a traves de comandos y getters con Juego&.
 class Juego {
 private:
-    RenderWindow& ventana;
-    const Font& fuente;
-    Texture texturaJuego;
-    Sprite fondoJuego;
-    Texture texturaReplay;
-    Sprite fondoReplay;
-    Texture texturaMenu;
-    Sprite fondoMenu;
-    Texture texturaPausa;
-    Sprite fondoPausa;
-    Texture texturaGameOver;
-    Sprite fondoGameOver;
-    Texture texturaRanking;
-    Sprite fondoRanking;
     Clock relojGravedad;
     Clock relojMarco;
     Clock relojReplay;
     bool replayDesdeGameOver;
     EstadoJuego estado;
-    int seleccionMenu;
 
     Tablero tablero;
     ColaPiezas colaPiezas;
@@ -84,43 +69,71 @@ private:
     void generarPieza();
     bool piezaPuede(int f, int c, int r) const;
     void gravedad();
-    void caerInstantaneo();
     void bloquearPieza();
-    void usarHold();
     void manejarEventosCola();
     int puntajePorLineas(int n) const;
-    void guardarRanking();
-    void activarOpcion();
-    int opcionEn(int x, int y) const;
     void capturarEstado(Estado& e) const;
     void restaurarEstado(const Estado& e);
-    void deshacer();
-    void rehacer();
-    void iniciarReplay();
-
-    void procesarEventos();
-    void actualizar();
-    void render();
-
-    void dibujarTexto(const string& s, int x, int y, unsigned tam,
-                      const Color& color) const;
-    Color colorDeTipo(int tipo) const;
-    void dibujarFondo();
-    void dibujarTablero();
-    void dibujarPanel();
-    void dibujarMenu();
-    void dibujarPausa();
-    void dibujarGameOver();
-    void dibujarReplayOverlay();
-    void dibujarRanking();
-    void dibujarProximamente(const string& titulo);
-    bool clicEnBotonPausa(int x, int y) const;
-    void dibujarBotonPausa() const;
-    void dibujarPiezaEn(int tipo, int rot, int px, int py, int tam) const;
 
 public:
-    Juego(RenderWindow& ventana, const Font& fuente);
-    void correr();
+    Juego();
+    void actualizar();
+
+    // Comandos de navegacion de estados (para GestorUI)
+    void iniciarNuevoJuego();
+    void irARanking();
+    void pausar();
+    void reanudar();
+    void volverAlMenu();
+    void volverDeReplay();
+    void setEstado(EstadoJuego e);
+    void elegirAlgoritmoRanking(int alg);
+    void guardarRanking();
+    void iniciarReplay();
+    void pasoReplayAtras();
+    void pasoReplayAdelante();
+
+    // Comandos de juego
+    void moverIzquierda();
+    void moverDerecha();
+    void rotar();
+    void bajarSuave();
+    void caerInstantaneo();
+    void usarHold();
+    void deshacer();
+    void rehacer();
+
+    // Entrada de nombre (fin de partida)
+    void agregarLetra(char c);
+    void borrarLetra();
+
+    // Getters para la Vista
+    EstadoJuego getEstado() const;
+    int getPuntaje() const;
+    int getNivel() const;
+    int getLineas() const;
+    int getTiempoMs() const;
+    int getVelocidadMs() const;
+    string getMensajeEvento() const;
+    int getTiempoEventoMs() const;
+    string getNombreJugador() const;
+    int getTipoActual() const;
+    int getRotActual() const;
+    int getFilaActual() const;
+    int getColActual() const;
+    int getTipoHold() const;
+    int getCeldaTablero(int f, int c) const;
+    int getProximaPieza(int k) const;
+    int getCantidadProximas() const;
+    int getNFilasBorrar() const;
+    int getFilaBorrar(int i) const;
+    int getParpadeoMs() const;
+    bool getReplayDesdeGameOver() const;
+    int getPasoReplay() const;
+    int getTotalPasos() const;
+    int getAlgoritmoRanking() const;
+    int getCantidadRanking() const;
+    Registro getRegistroRanking(int i) const;
 };
 
 #endif

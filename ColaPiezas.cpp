@@ -83,19 +83,19 @@ void ColaPiezas::rellenarSiFalta() {
     }
 }
 
-void ColaPiezas::copiarA(int* buf, int& f, int& t) const {
+void ColaPiezas::copiarA(int* destino, int& f, int& t) const {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
-        buf[i] = piezas[i];
+        destino[i] = piezas[i];
     }
     f = frente;
     t = tam;
 }
 
-void ColaPiezas::copiarDesde(const int* buf, int nFrente, int nTam) {
+void ColaPiezas::copiarDesde(const int* origen, int nFrente, int nTam) {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
-        piezas[i] = buf[i];
+        piezas[i] = origen[i];
     }
     frente = nFrente;
     tam = nTam;

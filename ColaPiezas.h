@@ -24,8 +24,8 @@ public:
     int tamano() const;
     int proximo(int k) const;
     void rellenarSiFalta();
-    void copiarA(int* buf, int& frente, int& tam) const;
-    void copiarDesde(const int* buf, int frente, int tam);
+    void copiarA(int* destino, int& frente, int& tam) const;
+    void copiarDesde(const int* origen, int frente, int tam);
 };
 
 #endif
