@@ -126,12 +126,8 @@ void GestorUI::procesarEventos(sf::Event& evento, Juego& contexto) {
             contexto.bajarSuave();
         } else if (tecla == Keyboard::Space) {
             contexto.caerInstantaneo();
-        } else if (tecla == Keyboard::C) {
+} else if (tecla == Keyboard::C) {
             contexto.usarHold();
-        } else if (tecla == Keyboard::D) {
-            contexto.deshacer();
-        } else if (tecla == Keyboard::A) {
-            contexto.rehacer();
         } else if (tecla == Keyboard::P || tecla == Keyboard::Escape) {
             contexto.pausar();
         }

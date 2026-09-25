@@ -72,6 +72,10 @@ void Juego::generarPieza() {
         return;
     }
 
+    registrarMovimiento();
+}
+
+void Juego::registrarMovimiento() {
     Estado e;
     capturarEstado(e);
     historial.agregarEstado(e);
@@ -86,6 +90,7 @@ void Juego::gravedad() {
     bool puede = piezaPuede(filaActual + 1, colActual, rotActual);
     if (puede) {
         filaActual = filaActual + 1;
+        registrarMovimiento();
     } else {
         bloquearPieza();
     }
@@ -100,6 +105,7 @@ void Juego::caerInstantaneo() {
         puede = piezaPuede(filaActual + 1, colActual, rotActual);
     }
     puntaje = puntaje + 2 * pasos;
+    registrarMovimiento();
     bloquearPieza();
 }
 
@@ -118,9 +124,7 @@ void Juego::bloquearPieza() {
         }
         nFilasBorrar = n;
         parpadeoMs = 0;
-        Estado e;
-        capturarEstado(e);
-        historial.agregarEstado(e);
+        registrarMovimiento();
         return;
     }
 
@@ -235,21 +239,6 @@ void Juego::restaurarEstado(const Estado& e) {
     relojGravedad.restart();
 }
 
-void Juego::deshacer() {
-    bool ok = historial.deshacer();
-    if (ok) {
-        restaurarEstado(historial.obtenerActual());
-        estado = JUGANDO;
-    }
-}
-
-void Juego::rehacer() {
-    bool ok = historial.rehacer();
-    if (ok) {
-        restaurarEstado(historial.obtenerActual());
-    }
-}
-
 void Juego::iniciarReplay() {
     replayDesdeGameOver = (estado == GAME_OVER);
     historial.irAlInicio();
@@ -278,6 +267,7 @@ void Juego::usarHold() {
         filaActual = PIEZA_SPAWN_FILA;
         colActual = PIEZA_SPAWN_COL;
         holdUsado = true;
+        registrarMovimiento();
 
         if (!piezaPuede(filaActual, colActual, rotActual)) {
             estado = GAME_OVER;
@@ -406,12 +396,14 @@ void Juego::pasoReplayAdelante() {
 void Juego::moverIzquierda() {
     if (piezaPuede(filaActual, colActual - 1, rotActual)) {
         colActual = colActual - 1;
+        registrarMovimiento();
     }
 }
 
 void Juego::moverDerecha() {
     if (piezaPuede(filaActual, colActual + 1, rotActual)) {
         colActual = colActual + 1;
+        registrarMovimiento();
     }
 }
 
@@ -419,6 +411,7 @@ void Juego::rotar() {
     int nuevaRot = (rotActual + 1) % 4;
     if (piezaPuede(filaActual, colActual, nuevaRot)) {
         rotActual = nuevaRot;
+        registrarMovimiento();
     }
 }
 
@@ -426,6 +419,7 @@ void Juego::bajarSuave() {
     if (piezaPuede(filaActual + 1, colActual, rotActual)) {
         filaActual = filaActual + 1;
         puntaje = puntaje + 1;
+        registrarMovimiento();
     } else {
         bloquearPieza();
     }

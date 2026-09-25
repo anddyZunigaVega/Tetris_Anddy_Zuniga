@@ -74,6 +74,7 @@ private:
     int puntajePorLineas(int n) const;
     void capturarEstado(Estado& e) const;
     void restaurarEstado(const Estado& e);
+    void registrarMovimiento();
 
 public:
     Juego();
@@ -100,8 +101,6 @@ public:
     void bajarSuave();
     void caerInstantaneo();
     void usarHold();
-    void deshacer();
-    void rehacer();
 
     // Entrada de nombre (fin de partida)
     void agregarLetra(char c);
