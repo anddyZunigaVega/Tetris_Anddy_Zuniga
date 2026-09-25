@@ -8,6 +8,7 @@
 #include "Tablero.h"
 #include "ColaPiezas.h"
 #include "Pila.h"
+#include "ColaEventos.h"
 #include "ListaDoble.h"
 #include "Ranking.h"
 
@@ -17,7 +18,7 @@ using namespace std;
 const int TAM_CELDA = 32;
 const int VENTANA_ANCHO = 980;
 const int VENTANA_ALTO = 720;
-const int VELOCIDAD_CAIDA_MS = 700;
+const int VELOCIDAD_INICIAL_MS = 800;
 
 enum EstadoJuego {
     MENU,
@@ -57,6 +58,7 @@ private:
     Tablero tablero;
     ColaPiezas colaPiezas;
     Pila pilaHold;
+    ColaEventos colaEventos;
     ListaDoble historial;
     Ranking ranking;
 
@@ -68,6 +70,9 @@ private:
     int nivel;
     int lineas;
     int tiempoMs;
+    int velocidadMs;
+    string mensajeEvento;
+    int tiempoEventoMs;
     bool holdUsado;
     string nombreJugador;
     int filasBorrar[20];
@@ -82,6 +87,7 @@ private:
     void caerInstantaneo();
     void bloquearPieza();
     void usarHold();
+    void manejarEventosCola();
     int puntajePorLineas(int n) const;
     void guardarRanking();
     void activarOpcion();

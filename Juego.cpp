@@ -42,15 +42,19 @@ estado = MENU;
     rotActual = 0;
     filaActual = 0;
     colActual = 0;
-    puntaje = 0;
+puntaje = 0;
     nivel = 1;
     lineas = 0;
     tiempoMs = 0;
+    velocidadMs = VELOCIDAD_INICIAL_MS;
+    mensajeEvento = "";
+    tiempoEventoMs = 0;
     holdUsado = false;
     nombreJugador = "";
     nFilasBorrar = 0;
     parpadeoMs = 0;
-algoritmoRanking = 0;
+    algoritmoRanking = 0;
+    colaEventos.limpiar();
     relojGravedad.restart();
     relojMarco.restart();
     if (!texturaJuego.loadFromFile("assets/imagenes/juego.png")) {
@@ -64,10 +68,12 @@ algoritmoRanking = 0;
     if (!texturaMenu.loadFromFile("assets/imagenes/mainMenu.png")) {
         cout << "Aviso: no se encontro assets/imagenes/mainMenu.png\n";
     }
+	
     fondoMenu.setTexture(texturaMenu);
     if (!texturaPausa.loadFromFile("assets/imagenes/pausa.png")) {
         cout << "Aviso: no se encontro assets/imagenes/pausa.png\n";
     }
+	
     fondoPausa.setTexture(texturaPausa);
     if (!texturaGameOver.loadFromFile("assets/imagenes/fondoGameOver.png")) {
         cout << "Aviso: no se encontro assets/imagenes/fondoGameOver.png\n";
@@ -97,16 +103,23 @@ void Juego::reiniciarPartida() {
     rotActual = 0;
     filaActual = 0;
     colActual = 0;
-    puntaje = 0;
+puntaje = 0;
     nivel = 1;
     lineas = 0;
     tiempoMs = 0;
+    velocidadMs = VELOCIDAD_INICIAL_MS;
+    mensajeEvento = "";
+    tiempoEventoMs = 0;
     holdUsado = false;
     nombreJugador = "";
     nFilasBorrar = 0;
     parpadeoMs = 0;
     relojGravedad.restart();
     relojMarco.restart();
+    colaEventos.limpiar();
+    colaEventos.insertar(Evento(15000, EVENTO_ACELERAR));
+    colaEventos.insertar(Evento(20000, EVENTO_BONUS_TIEMPO));
+    colaEventos.insertar(Evento(25000, EVENTO_BONUS_PUNTOS));
 }
 
 void Juego::generarPieza() {
@@ -185,6 +198,40 @@ int Juego::puntajePorLineas(int n) const {
         return 300;
     }
     return 1200;
+}
+
+void Juego::manejarEventosCola() {
+    bool hayEventos = !colaEventos.empty();
+    while (hayEventos) {
+        if (colaEventos.top().momento > tiempoMs) {
+            hayEventos = false;
+        } else {
+            Evento e = colaEventos.pop();
+            if (e.tipo == EVENTO_ACELERAR) {
+                velocidadMs = velocidadMs * 60 / 100;
+                if (velocidadMs < 60) {
+                    velocidadMs = 60;
+                }
+                mensajeEvento = "ACELERAR: caida mas rapida";
+                tiempoEventoMs = 3000;
+                int proximoMomento = e.momento + 15000;
+                colaEventos.insertar(Evento(proximoMomento, EVENTO_ACELERAR));
+            } else if (e.tipo == EVENTO_BONUS_TIEMPO) {
+                puntaje = puntaje + 50;
+                mensajeEvento = "BONUS TIEMPO: +50 puntos";
+                tiempoEventoMs = 3000;
+                int proximoMomento = e.momento + 20000;
+                colaEventos.insertar(Evento(proximoMomento, EVENTO_BONUS_TIEMPO));
+            } else if (e.tipo == EVENTO_BONUS_PUNTOS) {
+                puntaje = puntaje + 100;
+                mensajeEvento = "BONUS PUNTOS: +100 puntos";
+                tiempoEventoMs = 3000;
+                int proximoMomento = e.momento + 25000;
+                colaEventos.insertar(Evento(proximoMomento, EVENTO_BONUS_PUNTOS));
+            }
+            hayEventos = !colaEventos.empty();
+        }
+    }
 }
 
 void Juego::capturarEstado(Estado& e) const {
@@ -500,8 +547,12 @@ void Juego::actualizar() {
     Time dt = relojMarco.restart();
     int ms = dt.asMilliseconds();
 
-    if (estado == JUGANDO) {
+if (estado == JUGANDO) {
         tiempoMs = tiempoMs + ms;
+        manejarEventosCola();
+        if (tiempoEventoMs > 0) {
+            tiempoEventoMs = tiempoEventoMs - ms;
+        }
 
         if (nFilasBorrar > 0) {
             parpadeoMs = parpadeoMs + ms;
@@ -509,6 +560,10 @@ void Juego::actualizar() {
                 lineas = lineas + nFilasBorrar;
                 puntaje = puntaje + puntajePorLineas(nFilasBorrar) * nivel;
                 nivel = lineas / 10 + 1;
+                velocidadMs = VELOCIDAD_INICIAL_MS - (nivel - 1) * 70;
+                if (velocidadMs < 80) {
+                    velocidadMs = 80;
+                }
                 tablero.borrarFilas(filasBorrar, nFilasBorrar);
                 nFilasBorrar = 0;
                 parpadeoMs = 0;
@@ -519,7 +574,7 @@ void Juego::actualizar() {
         }
 
         int msGravedad = relojGravedad.getElapsedTime().asMilliseconds();
-        if (msGravedad >= VELOCIDAD_CAIDA_MS) {
+        if (msGravedad >= velocidadMs) {
             relojGravedad.restart();
             gravedad();
         }
@@ -703,6 +758,10 @@ void Juego::dibujarPanel() {
         }
         yPrev = yPrev + 96;
     }
+
+    if (tiempoEventoMs > 0 && !mensajeEvento.empty()) {
+        dibujarTexto(mensajeEvento, px, 470, 18, Color(120, 255, 160));
+    }
 }
 
 bool Juego::clicEnBotonPausa(int x, int y) const {
@@ -720,6 +779,8 @@ void Juego::dibujarBotonPausa() const {
 }
 
 void Juego::dibujarPausa() {
+	
+	
 }
 
 void Juego::dibujarReplayOverlay() {

@@ -40,19 +40,19 @@ void ColaPiezas::push(int tipo) {
         return;
     }
     int pos = posicionDe(tam);
-    buffer[pos] = tipo;
+    piezas[pos] = tipo;
     tam = tam + 1;
 }
 
 int ColaPiezas::pop() {
-    int valor = buffer[frente];
+    int valor = piezas[frente];
     frente = posicionDe(1);
     tam = tam - 1;
     return valor;
 }
 
 int ColaPiezas::front() const {
-    return buffer[frente];
+    return piezas[frente];
 }
 
 bool ColaPiezas::empty() const {
@@ -70,21 +70,23 @@ int ColaPiezas::posicionDe(int k) const {
 
 int ColaPiezas::proximo(int k) const {
     int pos = posicionDe(k);
-    return buffer[pos];
+    return piezas[pos];
 }
 
+// llenado pre-carga la bolsa siguiente cuando quedan 3 piezas o menos
+// preview de las 3 proximas nunca se queda sin piezas.
 void ColaPiezas::rellenarSiFalta() {
-    bool falta = (tam < 7) && (tam < COLA_CAPACIDAD);
+    bool falta = (tam < 4) && (tam < COLA_CAPACIDAD);
     while (falta) {
         llenarSaco();
-        falta = (tam < 7) && (tam < COLA_CAPACIDAD);
+        falta = (tam < 4) && (tam < COLA_CAPACIDAD);
     }
 }
 
 void ColaPiezas::copiarA(int* buf, int& f, int& t) const {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
-        buf[i] = buffer[i];
+        buf[i] = piezas[i];
     }
     f = frente;
     t = tam;
@@ -93,7 +95,7 @@ void ColaPiezas::copiarA(int* buf, int& f, int& t) const {
 void ColaPiezas::copiarDesde(const int* buf, int nFrente, int nTam) {
     int i;
     for (i = 0; i < COLA_CAPACIDAD; i++) {
-        buffer[i] = buf[i];
+        piezas[i] = buf[i];
     }
     frente = nFrente;
     tam = nTam;

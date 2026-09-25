@@ -1,14 +1,15 @@
 #ifndef COLAPIEZAS_H
 #define COLAPIEZAS_H
 
-const int COLA_CAPACIDAD = 21;
+const int COLA_CAPACIDAD = 10;
 
-// Cola FIFO de piezas implementada con buffer circular.
-// Se rellena con el algoritmo "7-bag": cada saco contiene las
-// 7 piezas del Tetris en orden aleatorio.
+// Cola FIFO de piezas implementada con arreglo circular.
+// Se rellena con el algoritmo "7-bag": una sola bolsa de 7 piezas del
+// Tetris en orden aleatorio; cuando le quedan 3 piezas se pre-carga la
+// siguiente bolsa, asi el jugador siempre ve 3 piezas proximas.
 class ColaPiezas {
 private:
-    int buffer[COLA_CAPACIDAD];
+    int piezas[COLA_CAPACIDAD];
     int frente;
     int tam;
     int posicionDe(int k) const;
