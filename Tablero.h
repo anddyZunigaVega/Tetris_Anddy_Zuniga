@@ -27,7 +27,7 @@ public:
     const int* getFila(int i) const;
     void setCelda(int fila, int col, int valor);
     int getCelda(int fila, int col) const;
-    void ponesFicha(int tipo, int rot, int fila, int col);
+    void ponerFicha(int tipo, int rot, int fila, int col);
     bool colision(int tipo, int rot, int fila, int col) const;
     int filasCompletas(int salida[20]) const;
     int borrarFilas(int* indices, int n);

@@ -47,6 +47,7 @@ private:
     void dibujarRanking(RenderWindow& ventana, const Juego& juego) const;
 
     bool clicEnBotonPausa(int x, int y) const;
+    bool clicEnBotonReplay(int x, int y) const;
     int opcionEn(int x, int y) const;
     void ejecutarOpcion(Juego& juego, int opcion);
 

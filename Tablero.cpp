@@ -119,7 +119,7 @@ bool Tablero::colision(int tipo, int rot, int fila, int col) const {
     return false;
 }
 
-void Tablero::ponesFicha(int tipo, int rot, int fila, int col) {
+void Tablero::ponerFicha(int tipo, int rot, int fila, int col) {
     int n = numCeldas(tipo);
     int k;
     for (k = 0; k < n; k++) {

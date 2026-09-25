@@ -113,7 +113,7 @@ void Juego::bloquearPieza() {
     if (estado != JUGANDO) {
         return;
     }
-    tablero.ponesFicha(tipoActual, rotActual, filaActual, colActual);
+    tablero.ponerFicha(tipoActual, rotActual, filaActual, colActual);
 
     int completas[20];
     int n = tablero.filasCompletas(completas);

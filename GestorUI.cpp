@@ -28,6 +28,11 @@ const int BTN_PAUSA_Y = 8;
 const int BTN_PAUSA_ANCHO = 60;
 const int BTN_PAUSA_ALTO = 30;
 
+const int BTN_REPLAY_X = 380;
+const int BTN_REPLAY_Y = 470;
+const int BTN_REPLAY_ANCHO = 220;
+const int BTN_REPLAY_ALTO = 50;
+
 GestorUI::GestorUI(RenderWindow& ventana, const Font& fuente)
     : ventana(ventana), fuente(fuente) {
     seleccionMenu = 0;
@@ -78,11 +83,18 @@ void GestorUI::procesarEventos(sf::Event& evento, Juego& contexto) {
                     contexto.pausar();
                 }
             }
-            if (contexto.getEstado() == MENU) {
+			if (contexto.getEstado() == MENU) {
                 int i = opcionEn(evento.mouseButton.x, evento.mouseButton.y);
                 if (i >= 0) {
                     seleccionMenu = i;
                     ejecutarOpcion(contexto, i);
+                }
+            }
+            if (contexto.getEstado() == GAME_OVER) {
+                if (clicEnBotonReplay(evento.mouseButton.x, evento.mouseButton.y)) {
+                    if (contexto.getTotalPasos() > 0) {
+                        contexto.iniciarReplay();
+                    }
                 }
             }
         }
@@ -141,12 +153,8 @@ void GestorUI::procesarEventos(sf::Event& evento, Juego& contexto) {
         } else if (tecla == Keyboard::Escape) {
             contexto.volverAlMenu();
         }
-    } else if (contexto.getEstado() == GAME_OVER) {
-        if (tecla == Keyboard::R) {
-            if (contexto.getTotalPasos() > 0) {
-                contexto.iniciarReplay();
-            }
-        } else if (tecla == Keyboard::Escape) {
+} else if (contexto.getEstado() == GAME_OVER) {
+        if (tecla == Keyboard::Escape) {
             contexto.volverAlMenu();
         }
     } else if (contexto.getEstado() == REPLAY) {
@@ -393,6 +401,23 @@ void GestorUI::dibujarGameOver(RenderWindow& ventana, const Juego& juego) const 
     FloatRect b = t.getLocalBounds();
     t.setPosition(490.0f - b.width / 2.0f, 342.0f);
     ventana.draw(t);
+
+    RectangleShape boton(Vector2f((float)BTN_REPLAY_ANCHO, (float)BTN_REPLAY_ALTO));
+    boton.setPosition((float)BTN_REPLAY_X, (float)BTN_REPLAY_Y);
+    boton.setFillColor(Color(66, 133, 244));
+    boton.setOutlineColor(Color(255, 255, 255));
+    boton.setOutlineThickness(2.0f);
+    ventana.draw(boton);
+
+    Text etiqueta;
+    etiqueta.setFont(fuente);
+    etiqueta.setString("Ver Replay");
+    etiqueta.setCharacterSize(22);
+    etiqueta.setFillColor(Color(255, 255, 255));
+    FloatRect lb = etiqueta.getLocalBounds();
+    etiqueta.setPosition((float)(BTN_REPLAY_X + (BTN_REPLAY_ANCHO - (int)lb.width) / 2),
+                         (float)(BTN_REPLAY_Y + (BTN_REPLAY_ALTO - (int)lb.height) / 2));
+    ventana.draw(etiqueta);
 }
 
 void GestorUI::dibujarRanking(RenderWindow& ventana, const Juego& juego) const {
@@ -419,6 +444,10 @@ void GestorUI::dibujarRanking(RenderWindow& ventana, const Juego& juego) const {
 
 bool GestorUI::clicEnBotonPausa(int x, int y) const {
     return x >= BTN_PAUSA_X && x < BTN_PAUSA_X + BTN_PAUSA_ANCHO && y >= BTN_PAUSA_Y && y < BTN_PAUSA_Y + BTN_PAUSA_ALTO;
+}
+
+bool GestorUI::clicEnBotonReplay(int x, int y) const {
+    return x >= BTN_REPLAY_X && x < BTN_REPLAY_X + BTN_REPLAY_ANCHO && y >= BTN_REPLAY_Y && y < BTN_REPLAY_Y + BTN_REPLAY_ALTO;
 }
 
 int GestorUI::opcionEn(int x, int y) const {
