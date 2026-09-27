@@ -28,10 +28,10 @@ const int BTN_PAUSA_Y = 8;
 const int BTN_PAUSA_ANCHO = 60;
 const int BTN_PAUSA_ALTO = 30;
 
-const int BTN_REPLAY_X = 380;
-const int BTN_REPLAY_Y = 470;
-const int BTN_REPLAY_ANCHO = 220;
-const int BTN_REPLAY_ALTO = 50;
+const int BTN_REPLAY_X = 394;
+const int BTN_REPLAY_Y = 465;
+const int BTN_REPLAY_ANCHO = 190;
+const int BTN_REPLAY_ALTO = 70;
 
 GestorUI::GestorUI(RenderWindow& ventana, const Font& fuente)
     : ventana(ventana), fuente(fuente) {
@@ -125,7 +125,7 @@ void GestorUI::procesarEventos(sf::Event& evento, Juego& contexto) {
         }
     } else if (contexto.getEstado() == JUGANDO) {
         if (contexto.getNFilasBorrar() > 0
-            && tecla != Keyboard::P && tecla != Keyboard::Escape) {
+            && tecla != Keyboard::Escape) {
             return;
         }
         if (tecla == Keyboard::Left) {
@@ -140,16 +140,12 @@ void GestorUI::procesarEventos(sf::Event& evento, Juego& contexto) {
             contexto.caerInstantaneo();
 } else if (tecla == Keyboard::C) {
             contexto.usarHold();
-        } else if (tecla == Keyboard::P || tecla == Keyboard::Escape) {
+        } else if (tecla == Keyboard::Escape) {
             contexto.pausar();
         }
     } else if (contexto.getEstado() == PAUSA) {
-        if (tecla == Keyboard::P) {
+        if (tecla == Keyboard::Return) {
             contexto.reanudar();
-        } else if (tecla == Keyboard::R) {
-            if (contexto.getTotalPasos() > 0) {
-                contexto.iniciarReplay();
-            }
         } else if (tecla == Keyboard::Escape) {
             contexto.volverAlMenu();
         }
@@ -211,7 +207,7 @@ void GestorUI::dibujar(RenderWindow& ventana, Juego& contexto) {
     ventana.display();
 }
 
-void GestorUI::dibujarTexto(RenderWindow& ventana, const string& s, int x, int y, int tam, const Color& color) const {
+void GestorUI::dibujarTexto(RenderWindow& ventana, const string& s, int x, int y, int tam, const Color& color) {
     Text t;
     t.setFont(fuente);
     t.setString(s);
@@ -221,7 +217,7 @@ void GestorUI::dibujarTexto(RenderWindow& ventana, const string& s, int x, int y
     ventana.draw(t);
 }
 
-Color GestorUI::colorDeTipo(int tipo) const {
+Color GestorUI::colorDeTipo(int tipo) {
     if (tipo == PIEZA_I) {
         return Color(0, 210, 255);
     }
@@ -247,7 +243,7 @@ Color GestorUI::colorDeTipo(int tipo) const {
 }
 
 void GestorUI::dibujarPiezaEn(RenderWindow& ventana, int tipo, int rot, int px,
-                              int py, int tam) const {
+                              int py, int tam) {
     if (tipo < 0) {
         return;
     }
@@ -264,7 +260,7 @@ void GestorUI::dibujarPiezaEn(RenderWindow& ventana, int tipo, int rot, int px,
     }
 }
 
-void GestorUI::dibujarTablero(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarTablero(RenderWindow& ventana, Juego& juego) {
     RectangleShape celda;
     for (int f = 0; f < FILAS_TABLERO; f++) {
         for (int c = 0; c < COLS_TABLERO; c++) {
@@ -295,7 +291,7 @@ void GestorUI::dibujarTablero(RenderWindow& ventana, const Juego& juego) const {
     }
 }
 
-void GestorUI::dibujarPanel(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarPanel(RenderWindow& ventana, Juego& juego) {
     int px = PX_PANEL;
 
     dibujarTexto(ventana, to_string(juego.getPuntaje()), px, 70, 40, Color(255, 220, 60));
@@ -323,7 +319,7 @@ void GestorUI::dibujarPanel(RenderWindow& ventana, const Juego& juego) const {
     }
 }
 
-void GestorUI::dibujarBotonPausa(RenderWindow& ventana) const {
+void GestorUI::dibujarBotonPausa(RenderWindow& ventana) {
     RectangleShape boton(Vector2f((float)BTN_PAUSA_ANCHO, (float)BTN_PAUSA_ALTO));
     boton.setPosition((float)BTN_PAUSA_X, (float)BTN_PAUSA_Y);
     boton.setFillColor(Color(255, 255, 255, 0));
@@ -332,7 +328,7 @@ void GestorUI::dibujarBotonPausa(RenderWindow& ventana) const {
     ventana.draw(boton);
 }
 
-void GestorUI::dibujarReplayOverlay(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarReplayOverlay(RenderWindow& ventana, Juego& juego) {
     int pasoActual = juego.getPasoReplay();
     int total = juego.getTotalPasos();
     string txt = to_string(pasoActual) + " de " + to_string(total);
@@ -341,7 +337,7 @@ void GestorUI::dibujarReplayOverlay(RenderWindow& ventana, const Juego& juego) c
     dibujarTexto(ventana, txt, PX_HOLD + 45 - (int)(b.width / 2), 570, 20, Color(255, 220, 60));
 }
 
-void GestorUI::dibujarMenu(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarMenu(RenderWindow& ventana, Juego& juego) {
     const char* opciones[3];
     opciones[0] = "Jugar";
     opciones[1] = "Ver ranking";
@@ -392,7 +388,7 @@ void GestorUI::dibujarMenu(RenderWindow& ventana, const Juego& juego) const {
     }
 }
 
-void GestorUI::dibujarGameOver(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarGameOver(RenderWindow& ventana, Juego& juego) {
     Text t;
     t.setFont(fuente);
     t.setString(juego.getNombreJugador() + "_");
@@ -401,26 +397,9 @@ void GestorUI::dibujarGameOver(RenderWindow& ventana, const Juego& juego) const 
     FloatRect b = t.getLocalBounds();
     t.setPosition(490.0f - b.width / 2.0f, 342.0f);
     ventana.draw(t);
-
-    RectangleShape boton(Vector2f((float)BTN_REPLAY_ANCHO, (float)BTN_REPLAY_ALTO));
-    boton.setPosition((float)BTN_REPLAY_X, (float)BTN_REPLAY_Y);
-    boton.setFillColor(Color(66, 133, 244));
-    boton.setOutlineColor(Color(255, 255, 255));
-    boton.setOutlineThickness(2.0f);
-    ventana.draw(boton);
-
-    Text etiqueta;
-    etiqueta.setFont(fuente);
-    etiqueta.setString("Ver Replay");
-    etiqueta.setCharacterSize(22);
-    etiqueta.setFillColor(Color(255, 255, 255));
-    FloatRect lb = etiqueta.getLocalBounds();
-    etiqueta.setPosition((float)(BTN_REPLAY_X + (BTN_REPLAY_ANCHO - (int)lb.width) / 2),
-                         (float)(BTN_REPLAY_Y + (BTN_REPLAY_ALTO - (int)lb.height) / 2));
-    ventana.draw(etiqueta);
 }
 
-void GestorUI::dibujarRanking(RenderWindow& ventana, const Juego& juego) const {
+void GestorUI::dibujarRanking(RenderWindow& ventana, Juego& juego) {
     string indicador = "Insercion";
     if (juego.getAlgoritmoRanking() == 1) {
         indicador = "Quicksort";
@@ -442,15 +421,15 @@ void GestorUI::dibujarRanking(RenderWindow& ventana, const Juego& juego) const {
     }
 }
 
-bool GestorUI::clicEnBotonPausa(int x, int y) const {
+bool GestorUI::clicEnBotonPausa(int x, int y) {
     return x >= BTN_PAUSA_X && x < BTN_PAUSA_X + BTN_PAUSA_ANCHO && y >= BTN_PAUSA_Y && y < BTN_PAUSA_Y + BTN_PAUSA_ALTO;
 }
 
-bool GestorUI::clicEnBotonReplay(int x, int y) const {
+bool GestorUI::clicEnBotonReplay(int x, int y) {
     return x >= BTN_REPLAY_X && x < BTN_REPLAY_X + BTN_REPLAY_ANCHO && y >= BTN_REPLAY_Y && y < BTN_REPLAY_Y + BTN_REPLAY_ALTO;
 }
 
-int GestorUI::opcionEn(int x, int y) const {
+int GestorUI::opcionEn(int x, int y) {
     int resultado = -1;
     for (int i = 0; i < 3; i++) {
         int px = MENU_BTN_X;

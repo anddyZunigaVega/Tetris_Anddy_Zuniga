@@ -34,21 +34,21 @@ private:
     int seleccionMenu;
 
     void dibujarTexto(RenderWindow& ventana, const string& s, int x, int y,
-                      int tam, const Color& color) const;
-    Color colorDeTipo(int tipo) const;
+                      int tam, const Color& color);
+    Color colorDeTipo(int tipo);
     void dibujarPiezaEn(RenderWindow& ventana, int tipo, int rot, int px,
-                        int py, int tam) const;
-    void dibujarTablero(RenderWindow& ventana, const Juego& juego) const;
-    void dibujarPanel(RenderWindow& ventana, const Juego& juego) const;
-    void dibujarBotonPausa(RenderWindow& ventana) const;
-    void dibujarMenu(RenderWindow& ventana, const Juego& juego) const;
-    void dibujarGameOver(RenderWindow& ventana, const Juego& juego) const;
-    void dibujarReplayOverlay(RenderWindow& ventana, const Juego& juego) const;
-    void dibujarRanking(RenderWindow& ventana, const Juego& juego) const;
+                        int py, int tam);
+    void dibujarTablero(RenderWindow& ventana, Juego& juego);
+    void dibujarPanel(RenderWindow& ventana, Juego& juego);
+    void dibujarBotonPausa(RenderWindow& ventana);
+    void dibujarMenu(RenderWindow& ventana, Juego& juego);
+    void dibujarGameOver(RenderWindow& ventana, Juego& juego);
+    void dibujarReplayOverlay(RenderWindow& ventana, Juego& juego);
+    void dibujarRanking(RenderWindow& ventana, Juego& juego);
 
-    bool clicEnBotonPausa(int x, int y) const;
-    bool clicEnBotonReplay(int x, int y) const;
-    int opcionEn(int x, int y) const;
+    bool clicEnBotonPausa(int x, int y);
+    bool clicEnBotonReplay(int x, int y);
+    int opcionEn(int x, int y);
     void ejecutarOpcion(Juego& juego, int opcion);
 
 public:

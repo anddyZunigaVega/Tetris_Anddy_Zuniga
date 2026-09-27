@@ -11,7 +11,6 @@ Juego::Juego() {
     colaPiezas = ColaPiezas();
     colaPiezas.rellenarSiFalta();
     estado = MENU;
-    replayDesdeGameOver = false;
     tipoActual = -1;
     rotActual = 0;
     filaActual = 0;
@@ -240,7 +239,6 @@ void Juego::restaurarEstado(const Estado& e) {
 }
 
 void Juego::iniciarReplay() {
-    replayDesdeGameOver = (estado == GAME_OVER);
     historial.irAlInicio();
     restaurarEstado(historial.obtenerActual());
     relojReplay.restart();
@@ -331,7 +329,7 @@ void Juego::actualizar() {
     }
 }
 
-// ---------- Comandos de navegacion de estados ----------
+//  Comandos de navegacion de estados 
 void Juego::iniciarNuevoJuego() {
     reiniciarPartida();
     estado = JUGANDO;
@@ -359,11 +357,7 @@ void Juego::volverAlMenu() {
 }
 
 void Juego::volverDeReplay() {
-    if (replayDesdeGameOver) {
-        estado = GAME_OVER;
-    } else {
-        estado = MENU;
-    }
+    estado = GAME_OVER;
 }
 
 void Juego::setEstado(EstadoJuego e) {
@@ -392,7 +386,7 @@ void Juego::pasoReplayAdelante() {
     }
 }
 
-// ---------- Comandos de juego ----------
+//  Comandos de juego 
 void Juego::moverIzquierda() {
     if (piezaPuede(filaActual, colActual - 1, rotActual)) {
         colActual = colActual - 1;
@@ -438,7 +432,7 @@ void Juego::borrarLetra() {
     }
 }
 
-// ---------- Getters para la Vista ----------
+// Getters para la Vista
 EstadoJuego Juego::getEstado() const { return estado; }
 int Juego::getPuntaje() const { return puntaje; }
 int Juego::getNivel() const { return nivel; }
@@ -475,8 +469,6 @@ int Juego::getCantidadProximas() const {
 int Juego::getNFilasBorrar() const { return nFilasBorrar; }
 int Juego::getFilaBorrar(int i) const { return filasBorrar[i]; }
 int Juego::getParpadeoMs() const { return parpadeoMs; }
-bool Juego::getReplayDesdeGameOver() const { return replayDesdeGameOver; }
-
 int Juego::getPasoReplay() const {
     return historial.ordenActual() + 1;
 }

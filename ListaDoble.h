@@ -41,6 +41,10 @@ private:
     int tam;
     void borrarFuturos();
 
+    // Bloquear copias para evitar colapsos de memoria (double-free)
+    ListaDoble(const ListaDoble&);
+    ListaDoble& operator=(const ListaDoble&);
+
 public:
     ListaDoble();
     ~ListaDoble();

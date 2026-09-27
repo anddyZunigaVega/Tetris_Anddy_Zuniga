@@ -1,5 +1,6 @@
 JUGADOR 1440
  Anddy 199
+ghghhg 164
  akdjaskd 138
 SASA 130
  gab 127
@@ -7,4 +8,5 @@ Andiddd 111
 JUGADOR 102
 AHHA 91
 Anddy 86
+  32
 gab 1

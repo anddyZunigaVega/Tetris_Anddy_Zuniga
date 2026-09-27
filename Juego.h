@@ -37,7 +37,6 @@ private:
     Clock relojGravedad;
     Clock relojMarco;
     Clock relojReplay;
-    bool replayDesdeGameOver;
     EstadoJuego estado;
 
     Tablero tablero;
@@ -127,7 +126,6 @@ public:
     int getNFilasBorrar() const;
     int getFilaBorrar(int i) const;
     int getParpadeoMs() const;
-    bool getReplayDesdeGameOver() const;
     int getPasoReplay() const;
     int getTotalPasos() const;
     int getAlgoritmoRanking() const;
