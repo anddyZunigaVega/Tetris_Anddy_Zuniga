@@ -73,8 +73,7 @@ int ColaPiezas::proximo(int k) const {
     return piezas[pos];
 }
 
-// llenado pre-carga la bolsa siguiente cuando quedan 3 piezas o menos
-// preview de las 3 proximas nunca se queda sin piezas.
+// llenado pre-carga la bolsa siguiente cuando quedan 3 piezas o menos para preview de las 3 proximas, nunca se queda sin piezas.
 void ColaPiezas::rellenarSiFalta() {
     bool falta = (tam < 4) && (tam < COLA_CAPACIDAD);
     while (falta) {

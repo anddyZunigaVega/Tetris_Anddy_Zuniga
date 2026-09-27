@@ -34,7 +34,6 @@ public:
     void guardar() const;
     int getCantidad() const;
     Registro obtener(int i) const;
-    void imprimir() const;
     void elegirAlgoritmo(int a);
     void reordenar();
 };

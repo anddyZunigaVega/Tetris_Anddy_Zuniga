@@ -207,17 +207,3 @@ int Tablero::borrarFilas(int* indices, int n) {
     return n;
 }
 
-int Tablero::celdasLlenas() const {
-    int total = 0;
-    NodoFila* n = cabeza;
-    while (n != 0) {
-        int c;
-        for (c = 0; c < COLS_TABLERO; c++) {
-            if (n->celdas[c] != 0) {
-                total = total + 1;
-            }
-        }
-        n = n->siguiente;
-    }
-    return total;
-}

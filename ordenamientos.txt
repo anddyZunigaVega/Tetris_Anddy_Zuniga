@@ -4,8 +4,8 @@ Insercion (O(n^2)) vs Quicksort (O(n log n))
 Tamano Insercion_ms Quick_ms Mismo_resultado Tiempo_igual
 10       0.000          0.000        SI               SI
 100      0.000          0.000        SI               SI
-1000     1.588          0.101        SI               NO
-10000    83.933         3.248        SI               NO
+1000     0.690          0.201        SI               NO
+10000    61.768         0.000        SI               NO
 
-Para 10000 datos: insercion 0.0839325 s, quicksort 0.003248 s
+Para 10000 datos: insercion 0.0617684 s, quicksort 0 s
 Resultados guardados en ordenamientos.txt

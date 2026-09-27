@@ -143,10 +143,3 @@ Registro Ranking::obtener(int i) const {
     return r;
 }
 
-void Ranking::imprimir() const {
-    int i;
-    for (i = 0; i < cantidad; i++) {
-        cout << (i + 1) << ". " << top[i].nombre
-             << " " << top[i].puntos << endl;
-    }
-}

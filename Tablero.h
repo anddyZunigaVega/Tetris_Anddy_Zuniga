@@ -31,7 +31,6 @@ public:
     bool colision(int tipo, int rot, int fila, int col) const;
     int filasCompletas(int salida[20]) const;
     int borrarFilas(int* indices, int n);
-    int celdasLlenas() const;
 };
 
 #endif

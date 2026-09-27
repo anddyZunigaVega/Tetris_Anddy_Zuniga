@@ -51,7 +51,6 @@ public:
     void limpiar();
     void agregarEstado(const Estado& e);
     bool deshacer();
-    bool rehacer();
     void irAlInicio();
     bool avanzar();
     bool hayAnterior() const;

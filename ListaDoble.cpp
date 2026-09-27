@@ -99,17 +99,6 @@ bool ListaDoble::deshacer() {
     return ok;
 }
 
-bool ListaDoble::rehacer() {
-    bool ok = false;
-    if (actual != 0) {
-        if (actual->siguiente != 0) {
-            actual = actual->siguiente;
-            ok = true;
-        }
-    }
-    return ok;
-}
-
 void ListaDoble::irAlInicio() {
     actual = primero;
 }
