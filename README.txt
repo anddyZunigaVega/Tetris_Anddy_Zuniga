@@ -1,4 +1,4 @@
-Tetris - Proyecto de Estructuras de Datos - Anddy Zúñiga Vega - Ced: 1 19830836
+Tetris - Proyecto de Estructuras de Datos - Anddy Zúñiga Vega 
 
 Este es un proyecto base para trabajar con la biblioteca SFML (http://www.sfml-dev.org). 
 
@@ -33,7 +33,8 @@ El juego cuenta con un sistema de eventos programados (como acelerar la velocida
 
 Cada vez que el juego genera un evento, este se inserta automáticamente en la posición correcta de la cola dependiendo de su momento de disparo (tiempo en milisegundos). El motor del juego revisa constantemente el frente de la cola y, cuando el tiempo del juego alcanza el tiempo del evento, este se extrae y aplica su efecto en la pantalla.
 
-Compilación y Ejecución
+Compilación y Ejecución:
+
 El proyecto está configurado para ser compilado en el IDE ZinjaI.
 
 1. Asegúrate de tener ZinjaI instalado junto con el compilador MinGW.
